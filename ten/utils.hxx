@@ -156,6 +156,15 @@ linear_index(const std::vector<std::size_t> &strides,
   return strides;
 }
 
+/// Compute the size from shape
+[[nodiscard]] size_type compute_size(const std::vector<std::size_t> &dims) {
+  size_type size = 1;
+  for (std::size_t i = 0; i < dims.size(); i++) {
+    size *= dims[i];
+  }
+  return size;
+}
+
 } // namespace ten::details
 
 #endif
