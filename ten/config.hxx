@@ -7,17 +7,17 @@ namespace ten {
 enum class arch { darwin, x64, unknown };
 
 template <arch arch_type> struct is_supported_arch {
-   static constexpr bool value = arch_type != arch::unknown;
+  static constexpr bool value = arch_type != arch::unknown;
 };
 
 constexpr arch get_arch_type() {
 #if defined(__APPLE__)
-   return arch::darwin;
+  return arch::darwin;
 #endif
 #if defined(__linux__)
-   return arch::x64;
+  return arch::x64;
 #endif
-   return arch::unknown;
+  return arch::unknown;
 }
 static constexpr arch arch_type = get_arch_type();
 
@@ -26,9 +26,7 @@ static_assert(is_supported_arch<arch_type>::value, "Unsuported architecture.");
 // Verbose mode
 static bool is_verbose = false;
 
-static void verbose(bool verbose_mode) {
-   is_verbose = verbose_mode;
-}
+static void verbose(bool verbose_mode) { is_verbose = verbose_mode; }
 
 // Simd
 enum class simd_backend { std, unknown };
