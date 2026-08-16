@@ -6,6 +6,7 @@
 #include <complex>
 #include <cstdint>
 #include <type_traits>
+#include <vector>
 
 namespace ten {
 template <class> std::string to_string();
@@ -163,6 +164,23 @@ linear_index(const std::vector<std::size_t> &strides,
     size *= dims[i];
   }
   return size;
+}
+
+// Test if two shapes are equal
+[[nodiscard]] bool same_shape(const std::vector<std::size_t> &a,
+                              const std::vector<std::size_t> &b) {
+  if (a.size() != b.size()) {
+    return false;
+  } else {
+    bool same = true;
+    for (std::size_t i = 0; i < a.size(); i++) {
+      if (a[i] != b[i]) {
+        same = false;
+        break;
+      }
+    }
+    return same;
+  }
 }
 
 } // namespace ten::details
