@@ -153,24 +153,24 @@ concept Row = is_row<std::remove_cvref_t<T>>::value;
 
 // Storage
 template <typename T> class dense_storage;
-template <typename T> class diagonal_storage;
 template <typename T> class sparse_storage;
-
-// Storage trait for special storages
-template <class> struct is_diagonal_storage : std::false_type {};
-template <class T>
-struct is_diagonal_storage<diagonal_storage<T>> : std::true_type {};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Storage types
 
 template <class> struct is_storage : std::false_type {};
+
+// Storages
 template <typename T> struct is_storage<dense_storage<T>> : std::true_type {};
 
-template <typename T>
-struct is_storage<diagonal_storage<T>> : std::true_type {};
-
 template <typename T> struct is_storage<sparse_storage<T>> : std::true_type {};
+
+// Dense storage
+template <typename T> struct is_dense_storage : std::false_type {};
+template <typename T>
+struct is_dense_storage<dense_storage<T>> : std::true_type {};
+template <typename T>
+static constexpr bool is_dense_storage_v = is_dense_storage<T>::value;
 
 ////////////////////////////////////////////////////////////////////////////////
 
