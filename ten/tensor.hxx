@@ -531,9 +531,6 @@ void operator+=(left_expr &&left, right_expr &&right) {
 /// \class scalar
 /// Hold a single value of type T.
 template <typename T> class scalar : public expr {
-public:
-  using node_type = scalar_node<T>;
-
 private:
   bool _requires_grad = false;
   std::shared_ptr<T> _value = nullptr;
@@ -687,7 +684,7 @@ public:
   friend TensorNode deserialize(std::istream &os);*/
 };
 
-/// \class Tensor
+/// \class tensor
 ///
 /// Tensor represented by a multidimentional array.
 template <typename T>
@@ -1097,10 +1094,8 @@ public:
     return _format & ::ten::storage_format::hermitian;
   }
 
-  /// TODO Mabe a diagonal class Return whether the tensor is diagonal
-  ///[[nodiscard]] bool is_diagonal() const {
-  ///  return _format == ::ten::storage_format::diagonal;
-  ///}
+  /// Return whether the tensor is diagonal matrix
+  [[nodiscard]] constexpr bool is_diagonal() { return false; }
 
   /// Return whether the tensor is lower triangular
   [[nodiscard]] bool is_lower_tr() const {
@@ -1496,6 +1491,222 @@ TensorType deserialize(std::istream &is) {
        std::shared_ptr<NodeType>(new NodeType(deserialize<NodeType>(is)));
    return TensorType(std::move(node));
 }*/
+
+////////////////////////////////////////////////////////////////////////////////
+// Diagonal matrix
+
+/// \class diagonal
+/// Diagonal square matrix
+template <typename T> class diagonal {
+public:
+  using value_type = T;
+  using node_type = tensor_node<T>;
+  using storage_type = node_type::storage_type;
+
+private:
+  /// Requires gradient
+  bool _requires_grad = false;
+  /// Storage order
+  ::ten::storage_order _order = ::ten::storage_order::col_major;
+  /// Size (here number of elemens in the diagonal)
+  std::size_t _size = 0;
+  /// shape
+  std::vector<std::size_t> _shape = {};
+  /// Strides
+  std::vector<std::size_t> _stride = {};
+  /// Node
+  std::shared_ptr<node_type> _node = nullptr;
+  /// Gradient
+  std::shared_ptr<node_type> _grad = nullptr;
+
+public:
+  explicit diagonal(
+      const std::shared_ptr<node_type> &node, const std::vector<size_t> &dims,
+      const bool requires_grad = false,
+      const ::ten::storage_order order = ::ten::storage_order::col_major)
+      : _requires_grad(requires_grad), _order(order), _shape(shape),
+        _stride(ten::details::compute_strides(_shape, _order)), _node(node) {
+    if (dims.size() != 2) {
+      std::cerr << "diagonal must be a matrix.\n";
+    } else if (dims[0] != dims[1]) {
+      std::cerr << "diagonal matrix must be square.\n";
+    }
+    _size = std::min(dims[0], dims[1]);
+    if (requires_grad) {
+      auto st = std::make_unique<storage_type>(_size);
+      _grad = std::make_shared<node_type>(std::move(st));
+    }
+  }
+
+  explicit diagonal(
+      const std::vector<std::size_t> &dims, const bool requires_grad = false,
+      const ::ten::storage_order order = ::ten::storage_order::col_major)
+      : _requires_grad(requires_grad), _order(order), _shape(dims),
+        _stride(ten::details::compute_strides(_shape, _order)) {
+    if (_shape.size() != 2) {
+      std::cerr << "diagonal must be a matrix.\n";
+    } else if (_shape[0] != _shape[1]) {
+      std::cerr << "diagonal matrix must be square.\n";
+    }
+    _size = std::min(_shape[0], _shape[1]);
+    auto storage = std::make_unique<storage_type>(_size);
+    _node = std::make_shared<node_type>(std::move(storage));
+    if (requires_grad) {
+      auto st = std::make_unique<storage_type>(_size);
+      _grad = std::make_shared<node_type>(std::move(st));
+    }
+  }
+
+  explicit diagonal(
+      std::initializer_list<std::size_t> &&dims,
+      const bool requires_grad = false,
+      const ::ten::storage_order order = ::ten::storage_order::col_major)
+      : _requires_grad(requires_grad), _order(order), _shape(std::move(dims)),
+        _stride(ten::details::compute_strides(_shape, _order)) {
+    if (_shape.size() != 2) {
+      std::cerr << "diagonal must be a matrix.\n";
+    } else if (_shape[0] != _shape[1]) {
+      std::cerr << "diagonal matrix must be square.\n";
+    }
+    _size = std::min(_shape[0], _shape[1]);
+    auto storage = std::make_unique<storage_type>(_size);
+    _node = std::make_shared<node_type>(std::move(storage));
+    if (requires_grad) {
+      auto st = std::make_unique<storage_type>(_size);
+      _grad = std::make_shared<node_type>(std::move(st));
+    }
+  }
+
+private:
+  [[nodiscard]] const value_type &at(std::size_t row, std::size_t col) const {
+    if (row != col) {
+      std::cerr << "Cannot acces diagonal matrix at index (" << row << ","
+                << col << ")\n";
+    }
+    return (*_node.get())[row];
+  }
+
+  [[nodiscard]] value_type &at(std::size_t row, std::size_t col) {
+    if (row != col) {
+      std::cerr << "Cannot acces diagonal matrix at index (" << row << ","
+                << col << ")\n";
+    }
+    return (*_node.get())[row];
+  }
+
+public:
+  // Assign a value of type T
+  diagonal &operator=(T value) noexcept {
+    for (std::size_t i = 0; i < _size; i++) {
+      (*_node.get())[i] = value;
+    }
+    return *this;
+  }
+
+  /// Copy constructor
+  diagonal(const diagonal &m) {
+    _requires_grad = m._requires_grad;
+    _order = m._order;
+    _size = m._size;
+    _shape = m._shape;
+    _stride = m._stride;
+    _node = m._node;
+    _grad = m._grad;
+  }
+
+  /// Copy constructor
+  diagonal(diagonal &&m) {
+    _requires_grad = std::move(m._requires_grad);
+    _order = std::move(m._order);
+    _size = std::move(m._size);
+    _shape = std::move(m._shape);
+    _stride = std::move(m._stride);
+    _node = std::move(m._node);
+    _grad = std::move(m._grad);
+  }
+
+  /// Assignment operator
+  diagonal &operator=(const diagonal &m) {
+    _requires_grad = m._requires_grad;
+    _order = m._order;
+    _size = m._size;
+    _shape = m._shape;
+    _stride = m._stride;
+    _node = m._node;
+    _grad = m._grad;
+    return *this;
+  }
+
+  /// Assignment operator
+  diagonal &operator=(diagonal &&m) {
+    _requires_grad = std::move(m._requires_grad);
+    _order = std::move(m._order);
+    _size = std::move(m._size);
+    _shape = std::move(m._shape);
+    _stride = std::move(m._stride);
+    _node = std::move(m._node);
+    _grad = std::move(m._grad);
+    return *this;
+  }
+
+  //// Returns the rank
+  [[nodiscard]] inline size_type rank() const { return _shape.size(); }
+
+  /// Get the dimension at index
+  [[nodiscard]] size_type dim(size_type index) const { return _shape[index]; }
+
+  /// Returns the shape
+  [[nodiscard]] inline const std::vector<std::size_t> &shape() const {
+    return _shape;
+  }
+
+  /// Returns the strides
+  [[nodiscard]] inline const std::vector<std::size_t> &strides() const {
+    return _stride;
+  }
+
+  // Data type
+  [[nodiscard]] inline ten::data_type data_type() noexcept {
+    return to_data_type<T>();
+  }
+
+  [[nodiscard]] constexpr ::ten::storage_format format() {
+    return ::ten::storage_format::diagonal;
+  }
+
+  [[nodiscard]] std::size_t size() const { return _size; }
+
+  /// Return whether the tensor is diagonal
+  [[nodiscard]] constexpr bool is_diagonal() { return true; }
+
+  // Returns the shared ptr to the node
+  [[nodiscard]] std::shared_ptr<node_type> node() const { return _node; }
+
+  /// Get the pointer to the data
+  [[nodiscard]] const T *data() const { return _node.get()->data(); }
+
+  /// Get the mutable pointer to the data
+  [[nodiscard]] T *data() { return _node.get()->data(); }
+
+  /// Returns the storage
+  [[nodiscard]] storage_type &storage() const { return _node.get()->storage(); }
+
+  /// Overload the [] operator
+  [[nodiscard]] const T &operator[](std::size_t index) const {
+    return (*_node.get())[index];
+  }
+  [[nodiscard]] T &operator[](std::size_t index) {
+    return (*_node.get())[index];
+  }
+
+  /// Overload the () operator
+  [[nodiscard]] const T &operator()(std::size_t row, std::size_t col) const {
+    return at(row, col);
+  }
+  [[nodiscard]] T &operator()(std::size_t row, std::size_t col) {
+    return at(row, col);
+  }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO Sparse tensors
