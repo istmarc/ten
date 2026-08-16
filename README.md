@@ -1,2 +1,3 @@
 # ten
-Dynamic tensor library for ML and High performance computing
+Dynamic tensor and mathematical library
+
