@@ -3321,7 +3321,7 @@ template <Expr ExprType> auto sqrt(ExprType &&expr) {
   using output_type = typename ::ten::details::output_type<expr_type>::type;
   using func_type = ::ten::functional::sqrt<input_type, output_type>;
   func_type *f = new func_type();
-  return unary_expr<expr_type, output_type, func_type>(expr, f);
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /*
