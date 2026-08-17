@@ -192,19 +192,21 @@ template <class> struct is_tensor_node : std::false_type {};
 template <typename T> struct is_tensor_node<tensor_node<T>> : std::true_type {};
 
 // Unary expr
-template <class Input, class Output> class unary_expr;
+template <class Input, class Output, class Func> class unary_expr;
 
 template <class> struct is_unary_expr : std::false_type {};
-template <class Input, class Output> struct is_unary_expr<unary_expr<Input, Output>> : std::true_type {};
+template <class Input, class Output, class Func>
+struct is_unary_expr<unary_expr<Input, Output, Func>> : std::true_type {};
 
 template <typename T>
 static constexpr bool is_unary_expr_v = is_unary_expr<T>::value;
 
 // Binary expr
-template <class X, class Y, class Output> class binary_expr;
+template <class X, class Y, class Output, class Func> class binary_expr;
 
 template <class> struct is_binary_expr : std::false_type {};
-template <class X, class Y, class Output> struct is_binary_expr<binary_expr<X, Y, Output>> : std::true_type {};
+template <class X, class Y, class Output, class Func>
+struct is_binary_expr<binary_expr<X, Y, Output, Func>> : std::true_type {};
 
 template <typename T>
 static constexpr bool is_binary_expr_v = is_binary_expr<T>::value;
@@ -216,8 +218,7 @@ template <typename T> class diagonal;
 
 template <class> struct is_diagonal : std::false_type {};
 
-template <typename T>
-struct is_diagonal<diagonal<T>> : std::true_type {};
+template <typename T> struct is_diagonal<diagonal<T>> : std::true_type {};
 
 template <typename T>
 static constexpr bool is_diagonal_v = is_diagonal<T>::value;
