@@ -5,12 +5,12 @@
 #include <ten/config.hxx>
 // Forward declaration of types
 #include <ten/types.hxx>
-// TODO Kernels
-// #include <ten/kernels/host>
+// Kernels
+#include <ten/kernels/host>
 // Implementation
 #include <ten/tensor.hxx>
-// TODO Distributions
-// #include <ten/distributions.hxx>
+// Distributions
+#include <ten/distributions.hxx>
 // TODO Random numbers generation from distributions
 // #include <ten/random.hxx>
 
