@@ -6,7 +6,7 @@
 #include <memory>
 #include <type_traits>
 
-// #include <ten/kernels/host>
+#include <ten/kernels/host>
 #include <ten/types.hxx>
 
 namespace ten {
@@ -362,62 +362,59 @@ struct sqrt : func {
   }*/
 };
 
-/*
 /// Square
 template <class X, class Y>
-   requires(((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
-              ::ten::is_row<X>::value) &&
-             ::ten::is_tensor<Y>::value) ||
-            (::ten::is_scalar_v<X> && ::ten::is_scalar_v<Y>))
+  requires(((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
+             ::ten::is_row<X>::value) &&
+            ::ten::is_tensor<Y>::value) ||
+           (::ten::is_scalar_v<X> && ::ten::is_scalar_v<Y>))
 struct sqr : func {
-   static constexpr std::string name() { return std::string("sqr"); }
+  static constexpr std::string name() { return std::string("sqr"); }
 
-   using value_type = X::value_type;
-   using output_value_type = Y::value_type;
-   using output_type = Y;
+  using value_type = X::value_type;
+  using output_value_type = Y::value_type;
+  using output_type = Y;
 
-   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
-      if constexpr (::ten::is_scalar<X>::value) {
-         if (!y) {
-            y = std::make_shared<Y>();
-         }
-         y.value() = x.value() * x.value();
+  void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
+    if constexpr (::ten::is_scalar<X>::value) {
+      if (!y) {
+        y = std::make_shared<Y>();
       }
-      if constexpr (::ten::is_tensor_v<Y>) {
-         if (!y) {
-            y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
-x->storage_order());
-         }
-         auto xarr = *x.get();
-         auto yarr = *y.get();
-         ::ten::kernels::binary_ops<::ten::binary_operation::mul>(xarr, xarr,
-                                                                  yarr);
-         for (size_t i = 0; i < x.size(); i++) {
-            y[i] = static_cast<output_value_type>(x[i]) *
-                   static_cast<output_value_type>(x[i]);
-         }
+      y.value() = x.value() * x.value();
+    }
+    if constexpr (::ten::is_tensor_v<Y>) {
+      if (!y) {
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
-   }
+      auto xarr = *x.get();
+      auto yarr = *y.get();
+      ::ten::kernels::binary_ops<::ten::binary_operation::mul>(xarr, xarr,
+                                                               yarr);
+    }
+  }
 
-   template <class Gradient>
-      requires(::ten::is_scalar_v<X> && ::ten::is_scalar_v<Gradient>)
-   void gradient(X &x, Gradient &grad) {
-      grad->value() = 2 * x->value();
-   }
+  /*
+  template <class Gradient>
+     requires(::ten::is_scalar_v<X> && ::ten::is_scalar_v<Gradient>)
+  void gradient(X &x, Gradient &grad) {
+     grad->value() = 2 * x->value();
+  }
 
-   template <class Gradient>
-      requires(::ten::is_tensor_v<X> && ::ten::is_tensor_v<Gradient>)
-   void gradient(X &x, Gradient &grad) {
-      if (x.shape() != grad.shape()) {
-         std::cerr << "ten::functional::sqr gradient incompatible shapes.\n";
-      } else {
-         for (size_t i = 0; i < x.size(); i++) {
-            grad[i] = 2 * x[i];
-         }
-      }
-   }
+  template <class Gradient>
+     requires(::ten::is_tensor_v<X> && ::ten::is_tensor_v<Gradient>)
+  void gradient(X &x, Gradient &grad) {
+     if (x.shape() != grad.shape()) {
+        std::cerr << "ten::functional::sqr gradient incompatible shapes.\n";
+     } else {
+        for (size_t i = 0; i < x.size(); i++) {
+           grad[i] = 2 * x[i];
+        }
+     }
+  }*/
 };
 
+/*
 /// absolute value
 template <class X, class Y>
    requires(((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||

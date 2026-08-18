@@ -3348,15 +3348,18 @@ template <Expr ExprType> auto sqrt(ExprType &&expr) {
   return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
-/*
 /// \fn sqr
 /// Returns the square of an expression
 template <Expr ExprType> auto sqr(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::sqr>(expr);
+  using func_type = ::ten::functional::sqr<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
+/*
 /// \fn sin
 /// Returns the sine of a scalar, a tensor or an expression
 template <Expr ExprType> auto sin(ExprType &&expr) {
