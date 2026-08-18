@@ -819,7 +819,7 @@ public:
   /// Construct a tensor from node, shape, format and storage order
   explicit tensor(std::shared_ptr<node_type> &&node,
                   const std::vector<std::size_t> &dims,
-                  ::ten::storage_format format,
+                  const ::ten::storage_format format,
                   const bool requires_grad = false,
                   const ::ten::storage_order order =
                       ::ten::storage_order::col_major) noexcept
