@@ -296,7 +296,6 @@ namespace ten::functional {
 ////////////////////////////////////////////////////////////////////////////////
 // Functions types
 struct func {
-  void call(auto...);
   virtual ~func() {}
 };
 
@@ -329,7 +328,7 @@ struct sqrt : func {
   using output_value_type = Y::value_type;
   using output_type = Y;
 
-  void apply(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
+  void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if constexpr (::ten::is_scalar_v<X> && ::ten::is_scalar_v<Y>) {
       if (!y) {
         y = std::make_shared<Y>();
@@ -339,7 +338,8 @@ struct sqrt : func {
     if constexpr (::ten::is_tensor_v<X> || ::ten::is_column_v<X> ||
                   ::ten::is_row_v<X>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
       for (size_t i = 0; i < x->size(); i++) {
         (*y.get())[i] =
@@ -369,14 +369,14 @@ template <class X, class Y>
               ::ten::is_row<X>::value) &&
              ::ten::is_tensor<Y>::value) ||
             (::ten::is_scalar_v<X> && ::ten::is_scalar_v<Y>))
-struct sqr : func<> {
+struct sqr : func {
    static constexpr std::string name() { return std::string("sqr"); }
 
    using value_type = X::value_type;
    using output_value_type = Y::value_type;
    using output_type = Y;
 
-   void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
+   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
       if constexpr (::ten::is_scalar<X>::value) {
          if (!y) {
             y = std::make_shared<Y>();
@@ -385,7 +385,8 @@ struct sqr : func<> {
       }
       if constexpr (::ten::is_tensor_v<Y>) {
          if (!y) {
-            y = std::make_shared<Y>(x->shape());
+            y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+x->storage_order());
          }
          auto xarr = *x.get();
          auto yarr = *y.get();

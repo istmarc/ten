@@ -844,6 +844,10 @@ public:
     _size = ten::details::compute_size(_shape);
     auto storage = std::make_unique<storage_type>(_size);
     _node = std::make_shared<node_type>(std::move(storage));
+    if (requires_grad) {
+      auto grad_storage = std::make_unique<storage_type>(_size);
+      _grad = std::make_shared<node_type>(std::move(grad_storage));
+    }
   }
 
   /// Construct a tensor_node from a list of shape, format and storage order
@@ -857,6 +861,10 @@ public:
     _size = ten::details::compute_size(_shape);
     auto storage = std::make_unique<storage_type>(_size);
     _node = std::make_shared<node_type>(std::move(storage));
+    if (requires_grad) {
+      auto grad_storage = std::make_unique<storage_type>(_size);
+      _grad = std::make_shared<node_type>(std::move(grad_storage));
+    }
   }
 
   /// Tensor node from shape and initialize with data
@@ -890,6 +898,22 @@ public:
       : _requires_grad(requires_grad), _format(ten::storage_format::dense),
         _order(order), _size(ten::details::compute_size(dims)), _shape(dims),
         _stride(ten::details::compute_strides(_shape, _order)) {
+    auto storage = std::make_unique<storage_type>(_size);
+    _node = std::make_shared<node_type>(std::move(storage));
+    if (requires_grad) {
+      auto grad_storage = std::make_unique<storage_type>(_size);
+      _grad = std::make_shared<node_type>(std::move(grad_storage));
+    }
+  }
+
+  /// Construct a tensor_node from a shape, format and storage order
+  explicit tensor(const std::vector<std::size_t> &dims,
+                  ten::storage_format format, const bool requires_grad = false,
+                  const ::ten::storage_order order =
+                      ::ten::storage_order::col_major) noexcept
+      : _requires_grad(requires_grad), _format(format), _order(order),
+        _shape(dims), _stride(ten::details::compute_strides(_shape, _order)) {
+    _size = ten::details::compute_size(_shape);
     auto storage = std::make_unique<storage_type>(_size);
     _node = std::make_shared<node_type>(std::move(storage));
     if (requires_grad) {
