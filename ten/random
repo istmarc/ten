@@ -1,0 +1,6 @@
+#ifndef TEN_RANDOM
+#define TEN_RANDOM
+
+#include <ten/random.hxx>
+
+#endif

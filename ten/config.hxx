@@ -1,6 +1,8 @@
 #ifndef TEN_CONFIG_HXX
 #define TEN_CONFIG_HXX
 
+#include <cstddef>
+
 namespace ten {
 
 // Architecture
@@ -40,12 +42,12 @@ static simd_backend simd_backend_type = TENSEUR_SIMDBACKEND;
 #ifndef TENSEUR_SIMDVECLEN_FLOAT
 #define TENSEUR_SIMDVECLEN_FLOAT 32
 #endif
-static constexpr size_t simd_vecLen_float = TENSEUR_SIMDVECLEN_FLOAT;
+static constexpr std::size_t simd_vecLen_float = TENSEUR_SIMDVECLEN_FLOAT;
 
 #ifndef TENSEUR_SIMDVECLEN_DOUBLE
 #define TENSEUR_SIMDVECLEN_DOUBLE 16
 #endif
-static constexpr size_t simd_vecLen_double = TENSEUR_SIMDVECLEN_DOUBLE;
+static constexpr std::size_t simd_vecLen_double = TENSEUR_SIMDVECLEN_DOUBLE;
 
 } // namespace ten
 
