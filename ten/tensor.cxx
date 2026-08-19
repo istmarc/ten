@@ -84,12 +84,14 @@ using expr_sqrt_tensor_double =
     ten::unary_expr<tensor_double, tensor_double,
                     ten::functional::sqrt<tensor_double, tensor_double>>;
 
+/*
 using expr_sqr_tensor_float =
     ten::unary_expr<tensor_float, tensor_float,
                     ten::functional::sqrt<tensor_float, tensor_float>>;
 using expr_sqr_tensor_double =
     ten::unary_expr<tensor_double, tensor_double,
                     ten::functional::sqrt<tensor_double, tensor_double>>;
+*/
 
 /*
 using expr_min_vector_float =
@@ -346,6 +348,16 @@ auto py_reshape(T x, Shape &dims) {
 // using histogram_double = ten::ml::histogram<double>;
 // using histogram_options = ten::ml::histogram_options;
 
+// Create a new tensor
+template <typename T>
+ten::tensor<T>
+py_make_tensor(const std::vector<std::size_t> &dims,
+               const ten::storage_format format,
+               const bool requires_grad = false,
+               const ten::storage_order order = ten::storage_order::col_major) {
+  return ten::tensor<T>(dims, format, requires_grad, order);
+}
+
 PYBIND11_MODULE(tencore, m) {
   m.doc() = "Ten core: Bindings for the ten library";
 
@@ -494,12 +506,14 @@ PYBIND11_MODULE(tencore, m) {
       .def("eval", &expr_sqrt_tensor_double::eval);
 
   // sqr
-  py::class_<expr_sqr_tensor_float>(m, "expr_sqr_tensor_float")
-      .def("value", &expr_sqr_tensor_float::value)
-      .def("eval", &expr_sqr_tensor_float::eval);
-  py::class_<expr_sqr_tensor_double>(m, "expr_sqr_tensor_double")
-      .def("value", &expr_sqr_tensor_double::value)
-      .def("eval", &expr_sqr_tensor_double::eval);
+  /*
+ py::class_<expr_sqr_tensor_float>(m, "expr_sqr_tensor_float")
+     .def("value", &expr_sqr_tensor_float::value)
+     .def("eval", &expr_sqr_tensor_float::eval);
+ py::class_<expr_sqr_tensor_double>(m, "expr_sqr_tensor_double")
+     .def("value", &expr_sqr_tensor_double::value)
+     .def("eval", &expr_sqr_tensor_double::eval);
+  */
 
   // Reshape
   /*
@@ -548,9 +562,9 @@ PYBIND11_MODULE(tencore, m) {
 
   // Tensor float
   py::class_<tensor_float>(m, "tensor_float")
-      // FIXME constructor .def(py::init<const std::vector<std::size_t> &, const
-      // ten::storage_format,
-      //              const bool, const ten::storage_order>)
+      //.def(py::init<const std::vector<std::size_t> &, const
+      //ten::storage_format, const bool, const ten::storage_order>)
+      .def("make", &py_make_tensor<float>)
       .def("rank", &tensor_float::rank)
       .def("size", &tensor_float::size)
       .def("shape", &tensor_float::shape)

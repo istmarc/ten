@@ -908,7 +908,7 @@ public:
 
   /// Construct a tensor_node from a shape, format and storage order
   explicit tensor(const std::vector<std::size_t> &dims,
-                  ten::storage_format format, const bool requires_grad = false,
+                  const ten::storage_format format, const bool requires_grad = false,
                   const ::ten::storage_order order =
                       ::ten::storage_order::col_major) noexcept
       : _requires_grad(requires_grad), _format(format), _order(order),
