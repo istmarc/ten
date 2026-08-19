@@ -1,0 +1,6 @@
+#ifndef TEN_MATH
+#define TEN_MATH
+
+#include <ten/maths/sim.hxx>
+
+#endif
