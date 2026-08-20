@@ -562,8 +562,11 @@ PYBIND11_MODULE(tencore, m) {
       .def("rank", &tensor_float::rank)
       .def("size", &tensor_float::size)
       .def("shape", &tensor_float::shape)
+      .def("dim", &tensor_float::dim)
       .def("strides", &tensor_float::strides)
       .def("data_type", &tensor_float::data_type)
+      .def("format", &tensor_float::format)
+      .def("storage_order", &tensor_float::storage_order)
       .def("__getitem__",
            [](const tensor_float &t, size_t index) { return t[index]; })
       .def("__setitem__",
@@ -590,8 +593,11 @@ PYBIND11_MODULE(tencore, m) {
       .def("rank", &tensor_double::rank)
       .def("size", &tensor_double::size)
       .def("shape", &tensor_double::shape)
+      .def("dim", &tensor_double::dim)
       .def("strides", &tensor_double::strides)
-      .def("data_type", &tensor_float::data_type)
+      .def("data_type", &tensor_double::data_type)
+      .def("format", &tensor_double::format)
+      .def("storage_order", &tensor_double::storage_order)
       .def("__getitem__",
            [](const tensor_double &t, size_t index) { return t[index]; })
       .def("__setitem__", [](tensor_double &t, size_t index,
