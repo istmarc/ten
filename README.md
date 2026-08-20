@@ -16,22 +16,24 @@ An expression API class for representing unary and binary operations between ten
 
 ## Roadmap
 - [x] Dense tensors
-- [] Diagonal matrices
-- [] Sparse tensors
-- [] Tensor views and slicing
-- [] Lazy evaluation of expressions
-- [] BLAS backend for high performance numerical linear algebra
+- [x] Diagonal matrices
+- [x] Lazy evaluation of expressions
+- [x] BLAS backend for high performance numerical linear algebra
+- [x] Factory functions: fill, ones, zeros, range, linear
+- [x] Random numbers generation: rand_norm and rand_unif
+- [x] Generate automatic python bindings ([tenpy](https://github.com/istmarc/tenpy))
 - [] Automatic differentiation
 - [] Chain expressions
-- [] Factory functions: fill, ones, zeros, range, linear, rand_norm, rand_unif
+- [] Sparse tensors
+- [] Tensor views and slicing
 - [] Save and load binary data
 - [] Dataframe
-- [] Generate automatic python bindings ([tenpy](https://github.com/istmarc/tenpy)
 - [] Match and fuse operations
 - [] Inplace operations
-- [] Basic feed forward neural networks 
+- [] Basic feed forward neural networks
 - [] CI/CD with tests
 - [] Python documentation
+- [] C++ doygen documentation
 - [] C++ API documentation
 - [] Neural netowrks (Convolution, RNNs, LSTM, ...)
 
@@ -92,10 +94,9 @@ std::cout << x << std::endl;
 #include <ten/io>
 
 int main() {
-   using T = ten::tensor<float>;
-   auto a = ten::range<T>({3, 3});
-   auto b = ten::range<T>({3, 3});
-   auto c = ten::range<T>({3, 3});
+   auto a = ten::range<float>({3, 3});
+   auto b = ten::range<float>({3, 3});
+   auto c = ten::range<float>({3, 3});
 
    c = a * b + c;
    std::cout << c << std::endl;
@@ -109,7 +110,7 @@ int main() {
 #include <ten/linalg>
 
 int main() {
-   auto a = ten::range<ten::tensor<float>>({4, 4});
+   auto a = ten::range<float>({4, 4});
    auto [q, r] = ten::linalg::qr(a);
 
    std::cout << q << std::endl;
@@ -144,7 +145,7 @@ int main() {
 #include <ten/io>
 
 int main() {
-   auto x = ten::range<ten::tensor<float>>({3, 4});
+   auto x = ten::range<float>({3, 4});
    ten::io::save(x, "matrix.ten");
    auto y = ten::io::load<ten::tensor<float>>("matrix.ten").value();
    std::cout << "shape = " << y.shape() << std::endl;
