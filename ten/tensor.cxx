@@ -1,14 +1,11 @@
-#include "distributions.hxx"
 #include <cmath>
-#include <initializer_list>
-#include <iostream>
 
 #include <pybind11/attr.h>
-#include <ten/functional.hxx>
-// #include <ten/io>
-//  #include <ten/ml>
-#include <ten/tensor>
+
 #include <ten/types.hxx>
+
+#include <ten/io>
+#include <ten/tensor>
 
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -271,60 +268,45 @@ using mul_diagonal_double_diagonal_double =
 
 // Others binary functions
 
-/*
+////////////////////////////////////////////////////////////////////////////////
 // Initialization
-// fill<tensor<...>>(__shape, value)
-template <class __t>
-   requires(::ten::is_dynamic_tensor<__t>::value &&
-            ::ten::is_dense_storage<typename __t::storage_type>::value)
-[[nodiscard]] auto fill_py(typename __t::shape_type shape,
-                           typename __t::value_type value) {
-   using value_type = typename __t::value_type;
-   using shape_type = typename __t::shape_type;
-   __t x(std::forward<shape_type>(shape));
-   for (ten::size_type i = 0; i < x.size(); i++) {
-      x[i] = value;
-   }
-   return x;
+
+// fill<T>(shape, value, order)
+template <class T>
+[[nodiscard]] auto py_fill(const std::vector<std::size_t> &dims, T value,
+                           const ten::storage_order order) {
+  return ten::fill<ten::tensor<T>>(dims, value, false, order);
 }
 
-// zeros<tensor<...>>(shape)
-template <class __t>
-   requires(::ten::is_dynamic_tensor<__t>::value &&
-            ::ten::is_dense_storage<typename __t::storage_type>::value)
-[[nodiscard]] auto zeros_py(typename __t::shape_type shape) {
-   using value_type = typename __t::value_type;
-   using shape_type = typename __t::shape_type;
-   return fill<__t>(std::forward<shape_type>(shape), value_type(0));
+// zeros<T>(shape, order)
+template <class T>
+[[nodiscard]] auto py_zeros(const std::vector<std::size_t> &dims,
+                            const ten::storage_order order) {
+  return ten::zeros<ten::tensor<T>>(dims, false, order);
 }
 
-// ones<tensor<...>>(shape)
-template <class __t>
-   requires(::ten::is_dynamic_tensor<__t>::value &&
-            ::ten::is_dense_storage<typename __t::storage_type>::value)
-[[nodiscard]] auto ones_py(typename __t::shape_type shape) {
-   using value_type = typename __t::value_type;
-   using shape_type = typename __t::shape_type;
-   return fill<__t>(std::forward<shape_type>(shape), value_type(1));
+// ones<T>(shape, order)
+template <class T>
+[[nodiscard]] auto py_ones(const std::vector<std::size_t> &dims,
+                           const ten::storage_order order) {
+  return ten::ones<ten::tensor<T>>(dims, false, order);
 }
 
-// range<tensor<...>>(__shape, value)
-template <class __t>
-   requires(::ten::is_dynamic_tensor<__t>::value &&
-            ::ten::is_dense_storage<typename __t::storage_type>::value)
-[[nodiscard]] auto
-range_py(typename __t::shape_type shape,
-         typename __t::value_type value = typename __t::value_type(0)) {
-   using value_type = typename __t::value_type;
-   using shape_type = typename __t::shape_type;
-   __t x(std::forward<shape_type>(shape));
-   x[0] = value;
-   for (ten::size_type i = 1; i < x.size(); i++) {
-      x[i] = x[i - 1] + value_type(1);
-   }
-   return x;
+// range<T>(shape, value)
+template <class T>
+[[nodiscard]] auto py_range(const std::vector<std::size_t> &dims, T value,
+                            const ten::storage_order order) {
+  return ten::range<ten::tensor<T>>(dims, value, false, order);
 }
 
+// linear<T>(shape, start, stop, order)
+template <class T>
+[[nodiscard]] auto py_linear(const std::vector<std::size_t> &dims, T start,
+                             T stop, const ten::storage_order order) {
+  return ten::linear<ten::tensor<T>>(dims, start, stop, false, order);
+}
+
+/*
 // reshape
 template <class T, class Shape>
    requires(::ten::is_tensor_v<T>)
@@ -581,6 +563,7 @@ PYBIND11_MODULE(tencore, m) {
       .def("size", &tensor_float::size)
       .def("shape", &tensor_float::shape)
       .def("strides", &tensor_float::strides)
+      .def("data_type", &tensor_float::data_type)
       .def("__getitem__",
            [](const tensor_float &t, size_t index) { return t[index]; })
       .def("__setitem__",
@@ -603,6 +586,7 @@ PYBIND11_MODULE(tencore, m) {
       .def("size", &tensor_double::size)
       .def("shape", &tensor_double::shape)
       .def("strides", &tensor_double::strides)
+      .def("data_type", &tensor_float::data_type)
       .def("__getitem__",
            [](const tensor_double &t, size_t index) { return t[index]; })
       .def("__setitem__", [](tensor_double &t, size_t index,
@@ -617,6 +601,22 @@ PYBIND11_MODULE(tencore, m) {
   // Get and set values from vector
   m.def("tensor_double_get", &py_get_value<double>);
   m.def("tensor_double_set", &py_set_value<double>);
+
+  // Initialization functions
+  m.def("zeros_float", &py_zeros<float>);
+  m.def("zeros_double", &py_zeros<double>);
+
+  m.def("ones_float", &py_ones<float>);
+  m.def("ones_double", &py_ones<double>);
+
+  m.def("fill_float", &py_fill<float>);
+  m.def("fill_double", &py_fill<double>);
+
+  m.def("range_float", &py_range<float>);
+  m.def("range_double", &py_range<double>);
+
+  m.def("linear_float", &py_linear<float>);
+  m.def("linear_double", &py_linear<double>);
 
   /*
   // Transform diagonal to dense
