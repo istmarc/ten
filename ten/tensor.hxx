@@ -2899,10 +2899,10 @@ template <Expr ExprType> auto transpose(ExprType &&expr) {
 // fill<tensor<...>>(Shape, value)
 template <class T>
   requires(::ten::is_tensor<T>::value)
-[[nodiscard]] auto
-fill(const std::vector<std::size_t> &shape, typename T::value_type value,
-     bool requires_grad = false,
-     const ten::storage_order order = ::ten::storage_order::col_major) {
+[[nodiscard]] auto fill(const std::vector<std::size_t> &shape,
+                        typename T::value_type value,
+                        const bool requires_grad = false,
+                        const storage_order order = storage_order::col_major) {
   T x(shape, ::ten::storage_format::dense, requires_grad, order);
   for (size_type i = 0; i < x.size(); i++) {
     x[i] = value;
@@ -2912,142 +2912,182 @@ fill(const std::vector<std::size_t> &shape, typename T::value_type value,
 
 template <class T>
   requires(::ten::is_tensor<T>::value)
-[[nodiscard]] auto
-fill(std::initializer_list<std::size_t> &&dims, typename T::value_type value,
-     bool requires_grad = false,
-     const ::ten::storage_order order = ::ten::storage_order::col_major) {
+[[nodiscard]] auto fill(std::initializer_list<std::size_t> &&dims,
+                        typename T::value_type value,
+                        const bool requires_grad = false,
+                        const storage_order order = storage_order::col_major) {
   std::vector<size_t> shape(std::move(dims));
   return fill<T>(shape, value, requires_grad, order);
 }
 
 // fill<T>(shape, value)
 template <typename T>
-[[nodiscard]] auto
-fill(std::vector<std::size_t> &dims, T value, bool requires_grad = false,
-     const ::ten::storage_order order = ::ten::storage_order::col_major) {
+[[nodiscard]] auto fill(const std::vector<std::size_t> &dims, T value,
+                        const bool requires_grad = false,
+                        const storage_order order = storage_order::col_major) {
   using tensor_type = tensor<T>;
   return fill<tensor_type>(dims, value, requires_grad, order);
 }
 template <typename T>
-[[nodiscard]] auto
-fill(std::initializer_list<std::size_t> &&dims, T value,
-     bool requires_grad = false,
-     const ::ten::storage_order order = ::ten::storage_order::col_major) {
+[[nodiscard]] auto fill(std::initializer_list<std::size_t> &&dims, T value,
+                        bool requires_grad = false,
+                        const storage_order order = storage_order::col_major) {
   std::vector<std::size_t> shape(std::move(dims));
   using tensor_type = tensor<T>;
   return fill<tensor_type>(shape, value, requires_grad, order);
 }
-/*
-// TODO zeros<tensor<...>>(shape)
+
+// zeros<tensor<...>>(shape)
 template <class T>
-  requires(::ten::is_dynamic_tensor<T>::value &&
-           ::ten::is_dense_storage<typename T::storage_type>::value)
-[[nodiscard]] auto zeros(typename T::shape_type &&shape,
-                         bool requires_grad = false) {
+  requires(::ten::is_tensor_v<T>)
+[[nodiscard]] auto zeros(const std::vector<std::size_t> &dims,
+                         const bool requires_grad = false,
+                         const storage_order order = storage_order::col_major) {
   using value_type = typename T::value_type;
-  using shape_type = typename T::shape_type;
-  return fill<T>(std::forward<shape_type>(shape), value_type(0), requires_grad);
+  return fill<T>(dims, value_type(0), requires_grad, order);
+}
+template <class T>
+  requires(::ten::is_tensor_v<T>)
+[[nodiscard]] auto zeros(std::initializer_list<std::size_t> &&dims,
+                         const bool requires_grad = false,
+                         const storage_order order = storage_order::col_major) {
+  return zeros<T>(std::move(dims), requires_grad, order);
 }
 // zeros<T>(shape)
-template <typename  T>
-[[nodiscard]] auto zeros(Shape &&dims, bool requires_grad = false) {
-  using tensor_type = ranked_tensor<T, Shape, order, Storage, Allocator>;
-  return zeros<tensor_type>(std::forward<Shape>(dims), requires_grad);
+template <typename T>
+[[nodiscard]] auto zeros(const std::vector<std::size_t> &dims,
+                         const bool requires_grad = false,
+                         const storage_order order = storage_order::col_major) {
+  return zeros<tensor<T>>(dims, requires_grad, order);
+}
+template <typename T>
+[[nodiscard]] auto zeros(std::initializer_list<std::size_t> &&dims,
+                         const bool requires_grad = false,
+                         const storage_order order = storage_order::col_major) {
+  const std::vector<std::size_t> shape(std::move(dims));
+  return zeros<tensor<T>>(shape, requires_grad, order);
 }
 
-// TODO ones<tensor<...>>(shape)
+// ones<tensor<...>>(shape)
 template <class T>
-  requires(::ten::is_dynamic_tensor<T>::value &&
-           ::ten::is_dense_storage<typename T::storage_type>::value)
-[[nodiscard]] auto ones(typename T::shape_type &&shape,
-                        bool requires_grad = false) {
+  requires(::ten::is_tensor_v<T>)
+[[nodiscard]] auto ones(const std::vector<std::size_t> &dims,
+                        const bool requires_grad = false,
+                        const storage_order order = storage_order::col_major) {
   using value_type = typename T::value_type;
-  using shape_type = typename T::shape_type;
-  return fill<T>(std::forward<shape_type>(shape), value_type(1), requires_grad);
+  return fill<T>(dims, value_type(1), requires_grad, order);
 }
 
 template <class T>
-  requires(::ten::is_dynamic_tensor<T>::value &&
-           ::ten::is_dense_storage<typename T::storage_type>::value)
-[[nodiscard]] auto ones(std::initializer_list<size_type> &&dims,
-                        bool requires_grad = false) {
-  using shape_type = typename T::shape_type;
-  return ones<T>(shape_type(std::move(dims)), requires_grad);
+  requires(::ten::is_tensor_v<T>)
+[[nodiscard]] auto ones(std::initializer_list<std::size_t> &&dims,
+                        const bool requires_grad = false,
+                        const storage_order order = storage_order::col_major) {
+  using value_type = typename T::value_type;
+  const std::vector<std::size_t> shape(std::move(dims));
+  return fill<T>(shape, value_type(1), requires_grad, order);
 }
 
 // ones<T>(shape)
-template <
-    class T,
-[[nodiscard]] auto ones(Shape &&dims, bool requires_grad = false) {
-  using tensor_type = ranked_tensor<T, Shape, order, Storage, Allocator>;
-  return ones<tensor_type>(std::forward<shape>(dims), requires_grad);
-}
-template <class T, size_type Rank, storage_order order = default_order>
-[[nodiscard]] auto ones(std::initializer_list<size_type> &&dims,
-                        bool requires_grad = false) {
-  using shape_type = ::ten::dynamic_shape<Rank>;
-  return ones<T, shape_type, order>(shape_type(std::move(dims)), requires_grad);
-}
-
-
-// TODO range<tensor<...>>(Shape, value)
 template <class T>
+[[nodiscard]] auto ones(const std::vector<std::size_t> &dims,
+                        const bool requires_grad = false,
+                        const storage_order order = storage_order::col_major) {
+  return fill<tensor<T>>(dims, T(1), requires_grad, order);
+}
+template <class T>
+[[nodiscard]] auto ones(std::initializer_list<std::size_t> &&dims,
+                        const bool requires_grad = false,
+                        const storage_order order = storage_order::col_major) {
+  const std::vector<std::size_t> shape(std::move(dims));
+  return fill<tensor<T>>(shape, T(1), requires_grad, order);
+}
+
+// range<tensor<...>>(shape, value)
+template <class T>
+  requires(::ten::is_tensor_v<T>)
 [[nodiscard]] auto
-range(typename T::shape_type &&shape,
+range(const std::vector<std::size_t> &dims,
       typename T::value_type value = typename T::value_type(0),
-      bool requires_grad = false) {
+      const bool requires_grad = false,
+      const storage_order order = storage_order::col_major) {
   using value_type = typename T::value_type;
-  using shape_type = typename T::shape_type;
-  T x(std::forward<shape_type>(shape), requires_grad);
+  T x(dims, requires_grad, order);
   x[0] = value;
-  for (size_type i = 1; i < x.size(); i++) {
+  for (std::size_t i = 1; i < x.size(); i++) {
     x[i] = x[i - 1] + value_type(1);
   }
   return x;
 }
 template <class T>
+  requires(::ten::is_tensor_v<T>)
 [[nodiscard]] auto
 range(std::initializer_list<size_type> &&dims,
       typename T::value_type value = typename T::value_type(0),
-      bool requires_grad = false) {
-  using shape_type = typename T::shape_type;
-  return range<T>(shape_type(std::move(dims)), value, requires_grad);
+      const bool requires_grad = false,
+      const storage_order order = storage_order::col_major) {
+  const std::vector<std::size_t> shape(std::move(dims));
+  return range<T>(shape, value, requires_grad, order);
 }
 
-// range<T>(Shape, value)
-template <
-    class T>
-[[nodiscard]] auto range(Shape &&dims, T value = T(0),
-                         bool requires_grad = false) {
-  using tensor_type = ranked_tensor<T, Shape, order, Storage, Allocator>;
-  return range<tensor_type>(std::forward<Shape>(dims), value, requires_grad);
-}
-
-// TODO linear<tensor<...>>(Shape, start, stop)
+// range<T>(shape, value)
 template <class T>
+[[nodiscard]] auto range(const std::vector<std::size_t> &dims, T value = T(0),
+                         const bool requires_grad = false,
+                         const storage_order order = storage_order::col_major) {
+  return range<tensor<T>>(dims, value, requires_grad, order);
+}
+template <class T>
+[[nodiscard]] auto range(std::initializer_list<std::size_t> &&dims,
+                         T value = T(0), const bool requires_grad = false,
+                         const storage_order order = storage_order::col_major) {
+  const std::vector<std::size_t> shape(std::move(dims));
+  return range<tensor<T>>(shape, value, requires_grad, order);
+}
+
+// linear<tensor<...>>(shape, start, stop, requires_grad, order)
+template <class T>
+  requires(::ten::is_tensor_v<T>)
 [[nodiscard]] auto
-linear(typename T::shape_type &&shape, typename T::value_type start,
-       typename T::value_type stop, bool requires_grad = false) {
+linear(const std::vector<std::size_t> &dims, typename T::value_type start,
+       typename T::value_type stop, const bool requires_grad = false,
+       const storage_order order = storage_order::col_major) {
   using value_type = typename T::value_type;
-  using shape_type = typename T::shape_type;
-  T x(std::forward<shape_type>(shape), requires_grad);
+  T x(dims, requires_grad, order);
   x[0] = start;
-  size_t n = shape.size();
+  size_t n = x.size();
   value_type step = (stop - start) / (n - 1);
-  for (size_type i = 1; i < x.size(); i++) {
+  for (std::size_t i = 1; i < x.size(); i++) {
     x[i] = x[i - 1] + step;
   }
   return x;
 }
 template <class T>
-  requires(::ten::is_dynamic_tensor<T>::value &&
-           ::ten::is_dense_storage<typename T::storage_type>::value)
+  requires(::ten::is_tensor_v<T>)
 [[nodiscard]] auto
-linear(std::initializer_list<size_type> &&dims, typename T::value_type start,
-       typename T::value_type stop, bool requires_grad = false) {
-  using shape_type = typename T::shape_type;
-  return linear<T>(shape_type(std::move(dims)), start, stop, requires_grad);
-}*/
+linear(std::initializer_list<std::size_t> &&dims, typename T::value_type start,
+       typename T::value_type stop, const bool requires_grad = false,
+       const storage_order order = storage_order::col_major) {
+  const std::vector<std::size_t> shape(std::move(dims));
+  return linear<T>(shape, start, stop, requires_grad, order);
+}
+
+// linear<T>(shape, start, stop, requires_grad, order)
+template <typename T>
+[[nodiscard]] auto
+linear(const std::vector<std::size_t> &dims, T start, T stop,
+       const bool requires_grad = false,
+       const storage_order order = storage_order::col_major) {
+  return linear<tensor<T>>(dims, start, stop, requires_grad, order);
+}
+template <typename T>
+[[nodiscard]] auto
+linear(std::initializer_list<std::size_t> &&dims, T start, T stop,
+       const bool requires_grad = false,
+       const storage_order order = storage_order::col_major) {
+  const std::vector<std::size_t> shape(std::move(dims));
+  return linear<tensor<T>>(shape, start, stop, requires_grad, order);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO Identity
