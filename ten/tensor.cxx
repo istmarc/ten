@@ -573,7 +573,12 @@ PYBIND11_MODULE(tencore, m) {
       .def("is_hermitian", &tensor_float::is_hermitian)
       .def("is_diagonal", &tensor_float::is_diagonal)
       .def("is_lower_tr", &tensor_float::is_lower_tr)
-      .def("is_upper_tr", &tensor_float::is_upper_tr);
+      .def("is_upper_tr", &tensor_float::is_upper_tr)
+      .def("__repr__", [](const tensor_float &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
 
   // Get and set values from vector
   m.def("tensor_float_get", &py_get_value<float>);
@@ -596,7 +601,12 @@ PYBIND11_MODULE(tencore, m) {
       .def("is_hermitian", &tensor_double::is_hermitian)
       .def("is_diagonal", &tensor_double::is_diagonal)
       .def("is_lower_tr", &tensor_double::is_lower_tr)
-      .def("is_upper_tr", &tensor_double::is_upper_tr);
+      .def("is_upper_tr", &tensor_double::is_upper_tr)
+      .def("__repr__", [](const tensor_double &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
 
   // Get and set values from vector
   m.def("tensor_double_get", &py_get_value<double>);
