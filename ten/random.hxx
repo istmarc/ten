@@ -5,8 +5,6 @@
 #include <ten/types.hxx>
 
 #include <initializer_list>
-#include <optional>
-#include <random>
 
 namespace ten {
 

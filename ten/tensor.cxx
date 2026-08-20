@@ -5,6 +5,7 @@
 #include <ten/types.hxx>
 
 #include <ten/io>
+#include <ten/random>
 #include <ten/tensor>
 
 #include <pybind11/operators.h>
@@ -326,6 +327,31 @@ auto py_reshape(T x, Shape &dims) {
        ::ten::functional::dynamic_reshape<shape_type>::template func>(x, dims);
 }*/
 
+////////////////////////////////////////////////////////////////////////////////
+// Distributions
+using uniform_float = ten::uniform<float>;
+using uniform_double = ten::uniform<double>;
+using normal_float = ten::normal<float>;
+using normal_double = ten::normal<double>;
+using gamma_float = ten::gamma<float>;
+using gamma_double = ten::gamma<double>;
+
+template <typename T> auto py_make_uniform(T lower_bound, T upper_bound) {
+  return ten::uniform<float>(lower_bound, upper_bound);
+}
+
+template <typename T> auto py_make_normal(T mean, T std) {
+  return ten::normal<T>(mean, std);
+}
+
+template <typename T> auto py_make_gamma(T alpha, T beta) {
+  return ten::gamma<T>(alpha, beta);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Random
+
+////////////////////////////////////////////////////////////////////////////////
 // learning
 // using histogram_float = ten::ml::histogram<float>;
 // using histogram_double = ten::ml::histogram<double>;
@@ -353,6 +379,24 @@ void py_set_value(ten::tensor<T> &t, const std::vector<std::size_t> &indices,
                   T value) {
   t[indices] = value;
 }
+
+// Random
+template <typename T>
+auto py_rand_norm(
+    const std::vector<std::size_t> &dims, T mean, T std,
+    const ten::storage_order order = ten::storage_order::col_major) {
+  return ten::rand_norm<T>(dims, mean, std, false, order);
+}
+
+template <typename T>
+auto py_rand_unif(
+    const std::vector<std::size_t> &dims, T lower_bound, T upper_bound,
+    const ten::storage_order order = ten::storage_order::col_major) {
+  return ten::rand_unif<T>(dims, lower_bound, upper_bound, false, order);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Bindings for the core libray
 
 PYBIND11_MODULE(tencore, m) {
   m.doc() = "Ten core: Bindings for the ten library";
@@ -886,6 +930,71 @@ PYBIND11_MODULE(tencore, m) {
      .def(py::init<float, float>)
      .def("sample", &ten::uniform<float>::sample);
   */
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Distributions
+  py::class_<uniform_float>(m, "uniform_float")
+      .def("make", &py_make_uniform<float>)
+      .def("sample", [](uniform_float &dist) { return dist.sample(); })
+      .def("sample_tensor",
+           [](uniform_float &dist, const std::vector<std::size_t> &dims,
+              ten::storage_order order = ten::storage_order::col_major) {
+             return dist.sample(dims, false, order);
+           });
+
+  py::class_<uniform_double>(m, "uniform_double")
+      .def("make", &py_make_uniform<double>)
+      .def("sample", [](uniform_double &dist) { return dist.sample(); })
+      .def("sample_tensor",
+           [](uniform_double &dist, const std::vector<std::size_t> &dims,
+              ten::storage_order order = ten::storage_order::col_major) {
+             return dist.sample(dims, false, order);
+           });
+
+  py::class_<normal_float>(m, "normal_float")
+      .def("make", &py_make_normal<float>)
+      .def("sample", [](normal_float &dist) { return dist.sample(); })
+      .def("sample_tensor",
+           [](normal_float &dist, const std::vector<std::size_t> &dims,
+              ten::storage_order order = ten::storage_order::col_major) {
+             return dist.sample(dims, false, order);
+           });
+
+  py::class_<normal_double>(m, "normal_double")
+      .def("make", &py_make_normal<double>)
+      .def("sample", [](normal_double &dist) { return dist.sample(); })
+      .def("sample_tensor",
+           [](normal_double &dist, const std::vector<std::size_t> &dims,
+              ten::storage_order order = ten::storage_order::col_major) {
+             return dist.sample(dims, false, order);
+           });
+
+  py::class_<gamma_float>(m, "gamma_float")
+      .def("make", &py_make_gamma<float>)
+      .def("sample", [](gamma_float &dist) { return dist.sample(); })
+      .def("sample_tensor",
+           [](gamma_float &dist, const std::vector<std::size_t> &dims,
+              ten::storage_order order = ten::storage_order::col_major) {
+             return dist.sample(dims, false, order);
+           });
+
+  py::class_<gamma_double>(m, "gamma_double")
+      .def("make", &py_make_gamma<double>)
+      .def("sample", [](gamma_double &dist) { return dist.sample(); })
+      .def("sample_tensor",
+           [](gamma_double &dist, const std::vector<std::size_t> &dims,
+              ten::storage_order order = ten::storage_order::col_major) {
+             return dist.sample(dims, false, order);
+           });
+
+  /////////////////////////////////////////////////////////////////////////////
+  /// Random numbers generation
+
+  m.def("rand_norm_float", &py_rand_norm<float>);
+  m.def("rand_norm_double", &py_rand_norm<double>);
+
+  m.def("rand_unif_float", &py_rand_unif<float>);
+  m.def("rand_unif_double", &py_rand_unif<double>);
 
   /////////////////////////////////////////////////////////////////////////////
   // learning
