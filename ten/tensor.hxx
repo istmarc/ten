@@ -908,7 +908,8 @@ public:
 
   /// Construct a tensor_node from a shape, format and storage order
   explicit tensor(const std::vector<std::size_t> &dims,
-                  const ten::storage_format format, const bool requires_grad = false,
+                  const ten::storage_format format,
+                  const bool requires_grad = false,
                   const ::ten::storage_order order =
                       ::ten::storage_order::col_major) noexcept
       : _requires_grad(requires_grad), _format(format), _order(order),
@@ -1143,25 +1144,37 @@ public:
   [[nodiscard]] storage_type &storage() const { return _node.get()->storage(); }
 
   /// Overloading the [] operator
-  [[nodiscard]] inline const value_type &
-  operator[](size_type index) const noexcept {
+  [[nodiscard]] inline const T &operator[](std::size_t index) const noexcept {
     return (*_node.get())[index];
   }
 
   /// Overloading the [] operator
-  [[nodiscard]] inline value_type &operator[](size_type index) noexcept {
+  [[nodiscard]] inline T &operator[](std::size_t index) noexcept {
     return (*_node.get())[index];
   }
 
   /// Overloading the () operator
-  [[nodiscard]] inline const value_type &
-  operator()(auto... index) const noexcept {
+  [[nodiscard]] inline const T &operator()(auto... index) const noexcept {
     return at(index...);
   }
 
   /// Overloading the () operator
-  [[nodiscard]] inline value_type &operator()(auto... index) noexcept {
+  [[nodiscard]] inline T &operator()(auto... index) noexcept {
     return at(index...);
+  }
+
+  // Overload the [] operator for std::vector<std::size_t>
+  [[nodiscard]] inline const T &
+  operator[](const std::vector<std::size_t> &indices) const noexcept {
+    size_t index = ten::details::linear_index(_stride, indices);
+    return (*_node.get())[index];
+  }
+
+  // Overload the [] operator for std::vector<std::size_t>
+  [[nodiscard]] inline T &
+  operator[](const std::vector<std::size_t> &indices) noexcept {
+    size_t index = ten::details::linear_index(_stride, indices);
+    return (*_node.get())[index];
   }
 
   // TODO Overload the [] operator for mdseq

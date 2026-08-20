@@ -1,3 +1,4 @@
+#include "distributions.hxx"
 #include <cmath>
 #include <initializer_list>
 #include <iostream>
@@ -358,6 +359,19 @@ py_make_tensor(const std::vector<std::size_t> &dims,
   return ten::tensor<T>(dims, format, requires_grad, order);
 }
 
+// Get item from vector
+template <typename T>
+T &py_get_value(ten::tensor<T> &t, const std::vector<std::size_t> &indices) {
+  return t[indices];
+}
+
+// Set item from vector
+template <typename T>
+void py_set_value(ten::tensor<T> &t, const std::vector<std::size_t> &indices,
+                  T value) {
+  t[indices] = value;
+}
+
 PYBIND11_MODULE(tencore, m) {
   m.doc() = "Ten core: Bindings for the ten library";
 
@@ -562,8 +576,6 @@ PYBIND11_MODULE(tencore, m) {
 
   // Tensor float
   py::class_<tensor_float>(m, "tensor_float")
-      //.def(py::init<const std::vector<std::size_t> &, const
-      //ten::storage_format, const bool, const ten::storage_order>)
       .def("make", &py_make_tensor<float>)
       .def("rank", &tensor_float::rank)
       .def("size", &tensor_float::size)
@@ -571,50 +583,41 @@ PYBIND11_MODULE(tencore, m) {
       .def("strides", &tensor_float::strides)
       .def("__getitem__",
            [](const tensor_float &t, size_t index) { return t[index]; })
-      //.def("__getitem__",
-      //     [](const tensor_float &t, std::vector<std::size_t> index) { return
-      //     t[index]; })
+      .def("__setitem__",
+           [](tensor_float &t, size_t index, float value) { t[index] = value; })
+      .def("is_transposed", &tensor_float::is_transposed)
+      .def("is_symmetric", &tensor_float::is_symmetric)
+      .def("is_hermitian", &tensor_float::is_hermitian)
+      .def("is_diagonal", &tensor_float::is_diagonal)
+      .def("is_lower_tr", &tensor_float::is_lower_tr)
+      .def("is_upper_tr", &tensor_float::is_upper_tr);
 
-      .def("__setitem__", [](tensor_float &t, size_t index, float value) {
-        t[index] = value;
-      });
+  // Get and set values from vector
+  m.def("tensor_float_get", &py_get_value<float>);
+  m.def("tensor_float_set", &py_set_value<float>);
 
-  /*
-  .def("__setitem__",
-       [](tensor3_float &t, std::vector<size_t> indices,
-          float value) {
-          t(indices) = value;
-       })
-    */
-  //.def("__call__",
-  //     [](const tensor_float &t, size_t index) { return t[index]; })
-  /*      .def("__getitem__",
-        [](const tensor3_float &t,
-           std::tuple<size_t, size_t, size_t> indices) {
-           return t(std::get<0>(indices), std::get<1>(indices),
-                    std::get<2>(indices));
-        })
-   .def("__setitem__", [](tensor3_float &t, size_t index,
-                          float value) { t[index] = value; })
-   .def("__setitem__",
-        [](tensor3_float &t, std::tuple<size_t, size_t, size_t> indices,
-           float value) {
-           t(std::get<0>(indices), std::get<1>(indices),
-             std::get<2>(indices)) = value;
-        })
-     */
-  /*
-   .def("is_transposed", &tensor3_float::is_transposed)
-   .def("is_symmetric", &tensor3_float::is_symmetric)
-   .def("is_hermitian", &tensor3_float::is_hermitian)
-   .def("is_diagonal", &tensor3_float::is_diagonal)
-   .def("is_lower_tr", &tensor3_float::is_lower_tr)
-   .def("is_upper_tr", &tensor3_float::is_upper_tr)
-   .def("is_sparse_coo", &tensor3_float::is_sparse_coo)
-   .def("is_sparse_csc", &tensor3_float::is_sparse_csc)
-   .def("is_sparse_csr", &tensor3_float::is_sparse_csr)
-   .def("is_sparse", &tensor3_float::is_sparse);
-  */
+  // Tensor double
+  py::class_<tensor_double>(m, "tensor_double")
+      .def("make", &py_make_tensor<double>)
+      .def("rank", &tensor_double::rank)
+      .def("size", &tensor_double::size)
+      .def("shape", &tensor_double::shape)
+      .def("strides", &tensor_double::strides)
+      .def("__getitem__",
+           [](const tensor_double &t, size_t index) { return t[index]; })
+      .def("__setitem__", [](tensor_double &t, size_t index,
+                             double value) { t[index] = value; })
+      .def("is_transposed", &tensor_double::is_transposed)
+      .def("is_symmetric", &tensor_double::is_symmetric)
+      .def("is_hermitian", &tensor_double::is_hermitian)
+      .def("is_diagonal", &tensor_double::is_diagonal)
+      .def("is_lower_tr", &tensor_double::is_lower_tr)
+      .def("is_upper_tr", &tensor_double::is_upper_tr);
+
+  // Get and set values from vector
+  m.def("tensor_double_get", &py_get_value<double>);
+  m.def("tensor_double_set", &py_set_value<double>);
+
   /*
   // Transform diagonal to dense
   m.def("dense_float", &ten::dense<diagonal_float>);
@@ -856,6 +859,16 @@ PYBIND11_MODULE(tencore, m) {
   m.def("max_tensor4_double", &max_py<tensor4_double>);
   m.def("max_tensor5_float", &max_py<tensor5_float>);
   m.def("max_tensor5_double", &max_py<tensor5_double>);
+  */
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Distributions
+  m.def("set_seed", &ten::set_seed);
+
+  /*
+  py::class_<ten::uniform<float>>(m, "uniform_float")
+     .def(py::init<float, float>)
+     .def("sample", &ten::uniform<float>::sample);
   */
 
   /////////////////////////////////////////////////////////////////////////////
