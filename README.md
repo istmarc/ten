@@ -22,10 +22,10 @@ An expression API class for representing unary and binary operations between ten
 - [x] Factory functions: fill, ones, zeros, range, linear
 - [x] Random numbers generation: rand_norm and rand_unif
 - [x] Generate automatic python bindings ([tenpy](https://github.com/istmarc/tenpy))
+- [x] Tensor views and slicing
 - [] Automatic differentiation
 - [] Chain expressions
 - [] Sparse tensors
-- [] Tensor views and slicing
 - [] Save and load binary data
 - [] Dataframe
 - [] Match and fuse operations
@@ -36,7 +36,6 @@ An expression API class for representing unary and binary operations between ten
 - [] C++ doygen documentation
 - [] C++ API documentation
 - [] Neural netowrks (Convolution, RNNs, LSTM, ...)
-
 
 ## Requirements
 
