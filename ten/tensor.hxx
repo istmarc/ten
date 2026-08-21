@@ -1509,7 +1509,7 @@ private:
   /// Requires gradient
   bool _requires_grad = false;
   /// Storage order
-  ::ten::storage_order _order = ::ten::storage_order::col_major;
+  storage_order _order = storage_order::col_major;
   /// Size (here number of elemens in the diagonal)
   std::size_t _size = 0;
   /// shape
@@ -1580,7 +1580,7 @@ public:
   }
 
 private:
-  [[nodiscard]] const value_type &at(std::size_t row, std::size_t col) const {
+  [[nodiscard]] const T &at(std::size_t row, std::size_t col) const {
     if (row != col) {
       std::cerr << "Cannot acces diagonal matrix at index (" << row << ","
                 << col << ")\n";
@@ -1588,7 +1588,7 @@ private:
     return (*_node.get())[row];
   }
 
-  [[nodiscard]] value_type &at(std::size_t row, std::size_t col) {
+  [[nodiscard]] T &at(std::size_t row, std::size_t col) {
     if (row != col) {
       std::cerr << "Cannot acces diagonal matrix at index (" << row << ","
                 << col << ")\n";
@@ -1653,6 +1653,11 @@ public:
 
   //// Returns the rank
   [[nodiscard]] inline size_type rank() const { return _shape.size(); }
+
+  /// Returns the storage order
+  [[nodiscard]] inline ten::storage_order storage_order() const {
+    return _order;
+  }
 
   /// Get the dimension at index
   [[nodiscard]] size_type dim(size_type index) const { return _shape[index]; }
@@ -2993,23 +2998,21 @@ template <Matrix T>
 ////////////////////////////////////////////////////////////////////////////////
 // Conversion from special matrices and tensors
 
-/// TODO Convert diagonal matrix to dense
-/*
-template <class T>
-requires(ten::is_tensor<T>::value)
-auto dense(T x) -> decltype(auto) {
+/// Convert diagonal matrix to dense
+template <Diagonal T> auto dense(T x) -> decltype(auto) {
   using value_type = T::value_type;
-  size_type m = x.dim(0);
-  size_type n = x.dim(1);
+  std::size_t m = x.dim(0);
+  std::size_t n = x.dim(1);
   if (m != n) {
     std::cerr << "Diagonal matrix must be square\n";
   }
-  matrix<value_type> y = ten::zeros<ten::matrix<value_type>>({m, n});
+  auto order = x.storage_order();
+  tensor<value_type> y = zeros<value_type>({m, n}, false, order);
   for (size_t i = 0; i < m; i++) {
     y(i, i) = x[i];
   }
   return y;
-}*/
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Expressions
