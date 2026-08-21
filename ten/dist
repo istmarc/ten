@@ -1,6 +1,0 @@
-#ifndef TEN_DIST
-#define TEN_DIST
-
-#include <ten/distributions.hxx>
-
-#endif
