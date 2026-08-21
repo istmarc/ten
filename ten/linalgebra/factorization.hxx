@@ -59,11 +59,11 @@ public:
   }
 };
 
-/// QR facttorization of a matrix, returns the factors
+/// QR factorization of a matrix, returns the factors
 template <Tensor T> auto qr(T &&a) -> decltype(auto) {
   using value_type = typename std::remove_cvref_t<T>::value_type;
   qr_fact<value_type> qr;
-  qr.factorize(a);
+  qr.factorize(std::forward<T>(a));
   return qr.factors();
 }
 
@@ -154,7 +154,7 @@ public:
 template <Tensor T> auto lu(T &&a) -> decltype(auto) {
   using value_type = typename std::remove_cvref_t<T>::value_type;
   lu_fact<value_type> lu;
-  lu.factorize(a);
+  lu.factorize(std::forward<T>(a));
   return lu.factors();
 }
 
@@ -215,7 +215,7 @@ public:
 template <Tensor T> auto cholesky(T &&a) -> decltype(auto) {
   using value_type = typename std::remove_cvref_t<T>::value_type;
   cholesky_fact<value_type> chol;
-  chol.factorize(a);
+  chol.factorize(std::forward<T>(a));
   return chol.factors();
 }
 
@@ -269,7 +269,7 @@ public:
 template <Tensor T> auto svd(T &&a) -> decltype(auto) {
   using value_type = typename std::remove_cvref_t<T>::value_type;
   svd_fact<value_type> svd;
-  svd.factorize(a);
+  svd.factorize(std::forward<T>(a));
   return svd.factors();
 }
 

@@ -5,6 +5,7 @@
 #include <ten/types.hxx>
 
 #include <ten/io>
+#include <ten/linalg>
 #include <ten/random>
 #include <ten/tensor>
 
@@ -349,7 +350,23 @@ template <typename T> auto py_make_gamma(T alpha, T beta) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Random
+// Linear algebra
+
+template <typename T> auto py_qr(const ten::tensor<T> &a) {
+  return ten::linalg::qr(a);
+}
+
+template <typename T> auto py_lu(const ten::tensor<T> &a) {
+  return ten::linalg::lu(a);
+}
+
+template <typename T> auto py_cholesky(const ten::tensor<T> &a) {
+  return ten::linalg::cholesky(a);
+}
+
+template <typename T> auto py_svd(const ten::tensor<T> &a) {
+  return ten::linalg::svd(a);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // learning
@@ -995,6 +1012,18 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("rand_unif_float", &py_rand_unif<float>);
   m.def("rand_unif_double", &py_rand_unif<double>);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Linear algebra
+
+  m.def("qr_float", &py_qr<float>);
+  m.def("qr_double", &py_qr<double>);
+  m.def("lu_float", &py_lu<float>);
+  m.def("lu_double", &py_lu<double>);
+  m.def("cholesky_float", &py_cholesky<float>);
+  m.def("cholesky_double", &py_cholesky<double>);
+  m.def("svd_float", &py_svd<float>);
+  m.def("svd_double", &py_svd<double>);
 
   /////////////////////////////////////////////////////////////////////////////
   // learning

@@ -13,15 +13,19 @@ find_package(BLAS REQUIRED)
 message("BLAS linker flags : ${BLAS_LINKER_FLAGS}")
 message("BLAS libraries : ${BLAS_LIBRARIES}")
 message("BLAS vendor : ${BLA_VENDOR}")
+# LAPACK
+find_package(LAPACK REQUIRED)
+message("LAPACK linker flags : ${LAPACK_LINKER_FLAGS}")
+message("LAPACK libraries : ${LAPACK_LIBRARIES}")
 # Pybind
 find_package(Python COMPONENTS Interpreter Development)
 find_package(pybind11 CONFIG REQUIRED)
 
 
-
 pybind11_add_module(tencore ../../ten/tensor.cxx)
 
 target_link_libraries(tencore PRIVATE pybind11::module ${BLAS_LIBRARIES})
+target_link_libraries(tencore PRIVATE ${LAPACK_LIBRARIES} -llapacke)
 
 install(TARGETS tencore DESTINATION lib)
 
