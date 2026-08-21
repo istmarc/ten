@@ -700,15 +700,15 @@ public:
   using storage_type = node_type::storage_type;
 
   /// Tensor view type
-  // using tensor_view_type = tensor_view<T>;
+  using view_type = view<T>;
 
 private:
   /// Has gradient
   bool _requires_grad = false;
   /// Storage format
-  ::ten::storage_format _format = ::ten::storage_format::dense;
+  storage_format _format = storage_format::dense;
   /// Storage order
-  ::ten::storage_order _order = ::ten::storage_order::col_major;
+  storage_order _order = storage_order::col_major;
   /// Size
   std::size_t _size = 0;
   /// Shape
@@ -722,7 +722,7 @@ private:
 
 private:
   /// Returns the value at the indices
-  [[nodiscard]] inline value_type &at(size_type index, auto... tail) noexcept {
+  [[nodiscard]] inline T &at(size_type index, auto... tail) noexcept {
     const size_type rank = _shape.size();
     constexpr size_type tail_size = sizeof...(tail);
     // tail_size must be equal to 0 or rank-1
@@ -735,8 +735,8 @@ private:
   }
 
   /// Returns the value at the indices
-  [[nodiscard]] inline const value_type &at(size_type index,
-                                            auto... tail) const noexcept {
+  [[nodiscard]] inline const T &at(size_type index,
+                                   auto... tail) const noexcept {
     const size_type rank = _shape.size();
     constexpr size_type tail_size = sizeof...(tail);
     if constexpr (tail_size == 0) {
@@ -790,16 +790,20 @@ private:
      }
   }*/
 
+private:
+  /// Private default constructor
+  tensor(const bool requires_grad, const ten::storage_order order) noexcept
+      : _requires_grad(requires_grad), _node(nullptr),
+        _format(ten::storage_format::dense), _order(order), _size(0),
+        _shape({}), _stride({}) {}
+
 public:
-  // TODO MAYBE this shoould be private
-  // default constructor for serialization / deserialization and
-  // unary_expr, binary_expr
-  /*tensor(bool requires_grad = false) noexcept
-      : _requires_grad(requires_grad), _format(::ten::storage_format::dense),
-         _order(::ten::storage_order::col_major), _size(0),
-        _shape({}), _stride({}), _node(nullptr),
-         _grad(nullptr) {}
-   */
+  /// Make a tensor with default constructor
+  static tensor
+  make_default(const bool requires_grad = false,
+               const ten::storage_order order = ten::storage_order::col_major) {
+    return tensor(requires_grad, order);
+  }
 
   /// Construct a tensor from node, shape, format and storage order
   explicit tensor(const std::shared_ptr<node_type> &node,
