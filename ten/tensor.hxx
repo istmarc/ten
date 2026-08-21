@@ -569,19 +569,18 @@ public:
     }
   }
 
-  /// TODO Asignment from an expression
-  /*
- template <class Expr>
-   requires(::ten::is_unary_expr<std::remove_cvref_t<Expr>>::value ||
-            ::ten::is_binary_expr<std::remove_cvref_t<Expr>>::value)
- scalar(Expr &&expr) {
-   static_assert(::ten::is_scalar_v<typename Expr::output_type>,
-                 "Output type must be a scalar");
-   auto value = expr.eval();
-   _requires_grad = value.requires_grad();
-   _value = value.value_node();
-   _grad = value.grad_node();
- }*/
+  /// Asignment from an expression
+  template <class Expr>
+    requires(::ten::is_unary_expr<std::remove_cvref_t<Expr>>::value ||
+             ::ten::is_binary_expr<std::remove_cvref_t<Expr>>::value)
+  scalar(Expr &&expr) {
+    static_assert(::ten::is_scalar_v<typename Expr::output_type>,
+                  "Output type must be a scalar");
+    auto value = expr.eval();
+    _requires_grad = value.requires_grad();
+    _value = value.value_node();
+    _grad = value.grad_node();
+  }
 
   /// Get or set  the value
   [[nodiscard]] T &value() { return *_value.get(); }
@@ -966,53 +965,49 @@ public:
     }
   }
 
-  /// TODO Copy asignment from an expression
-  /*
- template <class ExprType>
-   requires((::ten::is_unary_expr<std::remove_cvref_t<ExprType>>::value ||
-             ::ten::is_binary_expr<std::remove_cvref_t<ExprType>>::value) &&
-            std::remove_cvref_t<ExprType>::output_type::is_dynamic())
- tensor(ExprType &&expr) noexcept {
-   using expr_type = std::remove_cvref_t<ExprType>;
-   using evaluated_type = typename expr_type::output_type;
+  /// Copy asignment from an expression
+  template <class ExprType>
+    requires(::ten::is_unary_expr_v<std::remove_cvref_t<ExprType>> ||
+             ::ten::is_binary_expr_v<std::remove_cvref_t<ExprType>>)
+  tensor(ExprType &&expr) noexcept {
+    using expr_type = std::remove_cvref_t<ExprType>;
+    using evaluated_type = typename expr_type::output_type;
 
-   static_assert(::ten::is_tensor<evaluated_type>::value,
-                 "Evaluated type must be a tensor.");
-   auto value = expr.eval();
-   _format = value.format();
-  _order = value.order();
-  _size = value.size();
-   _shape = value.shape();
-   _stride = value.strides();
-   _node = value.node();
-   _grad = value.grad_node();
- }*/
+    static_assert(::ten::is_tensor<evaluated_type>::value,
+                  "Evaluated type must be a tensor.");
+    auto value = expr.eval();
+    _format = value.format();
+    _order = value.storage_order();
+    _size = value.size();
+    _shape = value.shape();
+    _stride = value.strides();
+    _node = value.node();
+    _grad = value.grad_node();
+  }
 
-  /// TODO Asignment from an expression
-  /*
- template <class ExprType>
-   requires((::ten::is_unary_expr<std::remove_cvref_t<ExprType>>::value ||
-             ::ten::is_binary_expr<std::remove_cvref_t<ExprType>>::value) &&
-            std::remove_cvref_t<ExprType>::output_type::is_dynamic())
- tensor &operator=(ExprType &&expr) noexcept {
-   using expr_type = std::remove_cvref_t<ExprType>;
-   using evaluated_type = typename expr_type::output_type;
+  /// Asignment from an expression
+  template <class ExprType>
+    requires(::ten::is_unary_expr_v<std::remove_cvref_t<ExprType>> ||
+             ::ten::is_binary_expr_v<std::remove_cvref_t<ExprType>>)
+  tensor &operator=(ExprType &&expr) noexcept {
+    using expr_type = std::remove_cvref_t<ExprType>;
+    using evaluated_type = typename expr_type::output_type;
 
-   static_assert(::ten::is_tensor<evaluated_type>::value,
-                 "Evaluated type must be a tensor.");
+    static_assert(::ten::is_tensor<evaluated_type>::value,
+                  "Evaluated type must be a tensor.");
 
-   // TODO Match and fuse expression
-   //bool matched_fused = ::ten::match_fuse(expr, *this);
-     auto value = expr.eval();
-     _format = value.format();
-     _order = value.order();
-     _size = value.size();
-     _shape = value.shape();
-     _stride = value.strides();
-     _node = value.node();
-     _grad = value.grad_node();
-   return *this;
- }*/
+    // TODO Match and fuse expression
+    // bool matched_fused = ::ten::match_fuse(expr, *this);
+    auto value = expr.eval();
+    _format = value.format();
+    _order = value.storage_order();
+    _size = value.size();
+    _shape = value.shape();
+    _stride = value.strides();
+    _node = value.node();
+    _grad = value.grad_node();
+    return *this;
+  }
 
   // Assign a value of type T
   tensor &operator=(T value) noexcept {
@@ -1073,15 +1068,15 @@ public:
   }
 
   /// Returns the storage order
-  [[nodiscard]] inline const storage_order storage_order() const {
-    return _order;
-  }
+  [[nodiscard]] inline storage_order storage_order() const { return _order; }
 
   //// Returns the rank
-  [[nodiscard]] inline const size_type rank() const { return _shape.size(); }
+  [[nodiscard]] inline std::size_t rank() const { return _shape.size(); }
 
   /// Get the dimension at index
-  [[nodiscard]] size_type dim(size_type index) const { return _shape[index]; }
+  [[nodiscard]] std::size_t dim(std::size_t index) const {
+    return _shape[index];
+  }
 
   /// Returns the shape
   [[nodiscard]] inline const std::vector<std::size_t> &shape() const {
@@ -1094,7 +1089,7 @@ public:
   }
 
   /// Returns the size (number of elements of the tensor)
-  [[nodiscard]] inline size_type size() const { return _size; }
+  [[nodiscard]] inline std::size_t size() const { return _size; }
 
   /// Get the storage format
   [[nodiscard]] storage_format format() const { return _format; }
@@ -1248,9 +1243,8 @@ public:
        index, _shape.value(), _node);
  }*/
 
-  // TODO Returns the shared ptr to the gradient node
-  // [[nodiscard]] std::shared_ptr<node_type> grad_node() const { return _grad;
-  // }
+  // Returns the shared ptr to the gradient node
+  [[nodiscard]] std::shared_ptr<node_type> grad_node() const { return _grad; }
 
   // TODO Return the gradient tensor
   /*[[nodiscard]] tensor<T> grad() const {
@@ -1297,6 +1291,7 @@ public:
    return grad_linear(index...);
  }*/
 
+  /// Return whether it has gradient information
   [[nodiscard]] inline bool requires_grad() const { return _requires_grad; }
 
   // TODO Allocate the gradient tensor
