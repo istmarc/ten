@@ -397,6 +397,14 @@ void py_set_value(ten::tensor<T> &t, const std::vector<std::size_t> &indices,
   t[indices] = value;
 }
 
+// Create a new diagonal matrix
+template <typename T>
+ten::diagonal<T> py_make_diagonal(
+    const std::vector<std::size_t> &dims, const bool requires_grad = false,
+    const ten::storage_order order = ten::storage_order::col_major) {
+  return ten::diagonal<T>(dims, requires_grad, order);
+}
+
 // Random
 template <typename T>
 auto py_rand_norm(
@@ -419,39 +427,39 @@ PYBIND11_MODULE(tencore, m) {
   m.doc() = "Ten core: Bindings for the ten library";
 
   // Scalars
-  py::class_<scalar_float>(m, "scalar_float").def(py::init<const float &>())
-      //.def("value", &scalar_float::value)
-      ; /*.def("__repr__", [](const scalar_float &s) {
-         std::stringstream ss;
-         ss << s;
-         return ss.str();
-       });*/
+  py::class_<scalar_float>(m, "scalar_float").def(py::init<const float &>());
+  //.def("value", &scalar_float::value)
+  ; /*.def("__repr__", [](const scalar_float &s) {
+     std::stringstream ss;
+     ss << s;
+     return ss.str();
+   });*/
 
-  py::class_<scalar_double>(m, "scalar_double").def(py::init<const double &>())
-      //.def("value", &scalar_double::value)
-      ; /*.def("__repr__", [](const scalar_double &s) {
+  py::class_<scalar_double>(m, "scalar_double").def(py::init<const double &>());
+  //.def("value", &scalar_double::value)
+  ; /*.def("__repr__", [](const scalar_double &s) {
+     std::stringstream ss;
+     ss << s;
+     return ss.str();
+   });*/
+    /*
+   py::class_<scalar_int32>(m, "scalar_int32")
+       .def(py::init<const int32_t &>())
+       //.def("value", &scalar_int32::value)
+       .def("__repr__", [](const scalar_int32 &s) {
+         std::stringstream ss;
+         ss << s;
+         return ss.str();
+       });
+  
+   py::class_<scalar_int64>(m, "scalar_int64")
+       .def(py::init<const int64_t &>())
+       //.def("value", &scalar_int64::value)
+       .def("__repr__", [](const scalar_int64 &s) {
          std::stringstream ss;
          ss << s;
          return ss.str();
        });*/
-        /*
-       py::class_<scalar_int32>(m, "scalar_int32")
-           .def(py::init<const int32_t &>())
-           //.def("value", &scalar_int32::value)
-           .def("__repr__", [](const scalar_int32 &s) {
-             std::stringstream ss;
-             ss << s;
-             return ss.str();
-           });
-      
-       py::class_<scalar_int64>(m, "scalar_int64")
-           .def(py::init<const int64_t &>())
-           //.def("value", &scalar_int64::value)
-           .def("__repr__", [](const scalar_int64 &s) {
-             std::stringstream ss;
-             ss << s;
-             return ss.str();
-           });*/
 
   // Data type
   py::enum_<ten::data_type>(m, "data_type", py::arithmetic())
@@ -695,11 +703,43 @@ PYBIND11_MODULE(tencore, m) {
   m.def("linear_float", &py_linear<float>);
   m.def("linear_double", &py_linear<double>);
 
-  /*
+  // Diagonal float
+  py::class_<diagonal_float>(m, "diagonal_float")
+      .def("make", &py_make_diagonal<float>)
+      .def("rank", &diagonal_float::rank)
+      .def("size", &diagonal_float::size)
+      .def("shape", &diagonal_float::shape)
+      .def("dim", &diagonal_float::dim)
+      .def("strides", &diagonal_float::strides)
+      .def("data_type", &diagonal_float::data_type)
+      .def("format", &diagonal_float::format)
+      .def("storage_order", &diagonal_float::storage_order)
+      .def("__getitem__",
+           [](const diagonal_float &t, std::size_t index) { return t[index]; })
+      .def("__getitem__",
+           [](const diagonal_float &t,
+              std::tuple<std::size_t, std::size_t> index) {
+             return t(std::get<0>(index), std::get<1>(index));
+           })
+      .def("__setitem__", [](diagonal_float &t, std::size_t index,
+                             double value) { t[index] = value; })
+      .def("__setitem__",
+           [](diagonal_float &t, std::tuple<std::size_t, std::size_t> index,
+              double value) {
+             t(std::get<0>(index), std::get<1>(index)) = value;
+           })
+      .def("is_diagonal", &diagonal_float::is_diagonal)
+      .def("__repr__", [](const diagonal_float &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
+
   // Transform diagonal to dense
   m.def("dense_float", &ten::dense<diagonal_float>);
   m.def("dense_double", &ten::dense<diagonal_double>);
 
+  /*
   // Transposed, symmetric, lower_tr and upper_tr
   m.def("transposed_float", &ten::transposed<matrix_float>);
   m.def("transposed_double", &ten::transposed<matrix_double>);
