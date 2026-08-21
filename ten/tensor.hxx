@@ -1246,10 +1246,10 @@ public:
   // Returns the shared ptr to the gradient node
   [[nodiscard]] std::shared_ptr<node_type> grad_node() const { return _grad; }
 
-  // TODO Return the gradient tensor
-  /*[[nodiscard]] tensor<T> grad() const {
-      return tensor(_grad, _shape, _format, false, _order);
-  }*/
+  // Return the gradient tensor
+  [[nodiscard]] tensor<T> grad() const {
+    return tensor(_grad, _shape, _format, false, _order);
+  }
 
   /// TODO Get the gradient data
   // [[nodiscard]] const T *grad_data() const { return _grad.get()->data(); }
@@ -1261,19 +1261,15 @@ public:
   ///[[nodiscard]] Storage &grad_storage() const { return
   ///_grad.get()->storage(); }
 
-  /// TODO Get the gradient at index
-  /*
- [[nodiscard]] inline const typename base_type::value_type &
- grad_value(size_type index) const noexcept {
-   return (*_grad.get())[index];
- }*/
+  /// Get the gradient at index
+  [[nodiscard]] inline const T &grad_value(size_type index) const noexcept {
+    return (*_grad.get())[index];
+  }
 
-  /// TODO Get the gradient at index
-  /*
- [[nodiscard]] inline typename base_type::value_type &
- grad_value(size_type index) noexcept {
-   return (*_grad.get())[index];
- }*/
+  /// Get the gradient at index
+  [[nodiscard]] inline T &grad_value(size_type index) noexcept {
+    return (*_grad.get())[index];
+  }
 
   /// TODO Get the gradient at index...
   /*
@@ -1319,41 +1315,23 @@ public:
    }
  }*/
 
-  // TODO copy
-  /*
- auto copy(bool copy_grad = false) const {
-   if constexpr (Shape::is_dynamic()) {
-     auto st = std::make_unique<Storage>(_shape.value());
-     auto node = std::make_shared<node_type>(std::move(st));
-     tensor t(std::move(node), _shape.value(), _format, copy_grad);
-     // Copy the data to the new tensor
-     for (size_t i = 0; i < this->size(); i++) {
-       t[i] = (*_node.get())[i];
-     }
-     // Copy gradient
-     if (copy_grad && _requires_grad) {
-       for (size_t i = 0; i < this->size(); i++) {
-         t.grad_value(i) = (*_grad.get())[i];
-       }
-     }
-     return t;
-   } else {
-     auto st = std::make_unique<Storage>();
-     auto node = std::make_shared<node_type>(std::move(st));
-     tensor t(std::move(node), _format, copy_grad);
-     // Copy the data to the new tensor
-     for (size_t i = 0; i < this->size(); i++) {
-       t[i] = (*_node.get())[i];
-     }
-     // Copy gradient
-     if (copy_grad && _requires_grad) {
-       for (size_t i = 0; i < this->size(); i++) {
-         t.grad_value(i) = (*_grad.get())[i];
-       }
-     }
-     return t;
-   }
- }*/
+  /// Copy the tensor
+  auto copy(bool copy_grad = false) const {
+    auto st = std::make_unique<storage_type>(_size);
+    auto node = std::make_shared<node_type>(std::move(st));
+    tensor t(std::move(node), _shape, _format, copy_grad, _order);
+    // Copy the data to the new tensor
+    for (size_t i = 0; i < _size; i++) {
+      t[i] = (*_node.get())[i];
+    }
+    // Copy gradient
+    if (copy_grad && _requires_grad) {
+      for (size_t i = 0; i < _size; i++) {
+        t.grad_value(i) = (*_grad.get())[i];
+      }
+    }
+    return t;
+  }
 
   /// TODO Returns whether the tensor is sparse
   /*[[nodiscard]] bool is_sparse() const {
