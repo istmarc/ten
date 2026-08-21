@@ -1,0 +1,11 @@
+#ifndef TEN_LINALG
+#define TEN_LINALG
+
+// Lapack API
+#include <ten/kernels/lapack_api.hxx>
+// Linear Algebra
+#include <ten/linalgebra/linalgebra.hxx>
+#include <ten/linalgebra/factorization.hxx>
+#include <ten/linalgebra/least_squares.hxx>
+
+#endif

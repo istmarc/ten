@@ -1525,7 +1525,18 @@ private:
   /// Gradient
   std::shared_ptr<node_type> _grad = nullptr;
 
+private:
+  diagonal(const bool requires_grad, const ten::storage_order order)
+      : _requires_grad(requires_grad), _order(order), _size(0), _shape({}),
+        _stride({}), _node(nullptr), _grad(nullptr) {}
+
 public:
+  static diagonal
+  make_default(const bool requires_grad = false,
+               const ten::storage_order order = storage_order::col_major) {
+    return diagonal(requires_grad, order);
+  }
+
   explicit diagonal(
       const std::shared_ptr<node_type> &node, const std::vector<size_t> &dims,
       const bool requires_grad = false,

@@ -1,0 +1,279 @@
+#ifndef TEN_LINALGEBRA_FACTORIZATION_HXX
+#define TEN_LINALGEBRA_FACTORIZATION_HXX
+
+#include <ten/kernels/lapack_api.hxx>
+#include <ten/tensor.hxx>
+
+namespace ten {
+namespace linalg {
+
+/// QR factorization
+/// Factorize a matrix A = QR
+template <class T = float> class qr_fact {
+public:
+  using value_type = T;
+
+private:
+  tensor<T> _q;
+  tensor<T> _r;
+
+public:
+  qr_fact() : _q(tensor<T>::make_default()), _r(tensor<T>::make_default()) {};
+
+  void factorize(const tensor<T> &x) {
+    // Copy x
+    tensor<T> a = x.copy();
+
+    std::size_t m = a.dim(0);
+    std::size_t n = a.dim(1);
+    auto layout = a.storage_order();
+    _q = ::ten::zeros<T>({m, n});
+    _r = ::ten::zeros<T>({n, n});
+
+    ::ten::tensor<T> tau({n});
+    size_t lda = a.is_transposed() ? n : m;
+    ::ten::kernels::lapack::qr_fact(layout, m, n, a.data(), lda, tau.data());
+    // Copy R
+    for (size_t i = 0; i < n; i++) {
+      for (size_t j = i; j < n; j++) {
+        _r(i, j) = a(i, j);
+      }
+    }
+    // Copy Q
+    size_t k = n;
+    ::ten::kernels::lapack::qr_factq(layout, m, n, k, a.data(), lda,
+                                     tau.data());
+    for (size_t i = 0; i < n; i++) {
+      for (size_t j = 0; j < n; j++) {
+        _q(i, j) = a(i, j);
+      }
+    }
+  }
+
+  ten::tensor<T> q() const { return _q; }
+
+  ten::tensor<T> r() const { return _r; }
+
+  std::tuple<ten::tensor<T>, ten::tensor<T>> factors() const {
+    return std::make_tuple(_q, _r);
+  }
+};
+
+/// QR facttorization of a matrix, returns the factors
+template <Tensor T> auto qr(T &&a) -> decltype(auto) {
+  using value_type = typename std::remove_cvref_t<T>::value_type;
+  qr_fact<value_type> qr;
+  qr.factorize(a);
+  return qr.factors();
+}
+
+/// LU factorization
+/// Factorize a matrix PA = LU
+/// P i a permutation matrix, the inverse of P is its transpose
+template <class T = float> class lu_fact {
+public:
+  using value_type = T;
+
+private:
+  ten::tensor<T> _l;
+  ten::tensor<T> _u;
+  ten::tensor<int32_t> _p;
+
+public:
+  lu_fact()
+      : _l(tensor<T>::make_default()), _u(tensor<T>::make_default()),
+        _p(tensor<int32_t>::make_default()) {}
+
+  void factorize(const tensor<T> &x) {
+    // Copy x
+    ten::tensor<T> a = x.copy();
+
+    std::size_t m = a.dim(0);
+    std::size_t n = a.dim(1);
+
+    if (m != n) {
+      std::cerr << "LU decomposition: input is not a square matrix"
+                << std::endl;
+    }
+
+    std::size_t q = std::min(m, n);
+    _p = ten::tensor<int32_t>({q});
+    for (std::size_t i = 0; i < q; i++) {
+      _p[i] = T(i);
+    }
+    ten::tensor<int32_t> ipiv({q});
+
+    _l = ten::tensor<T>({m, n});
+    _u = ten::tensor<T>({n, n});
+
+    auto layout = a.storage_order();
+    std::size_t lda = a.is_transposed() ? n : m;
+    ::ten::kernels::lapack::lu_fact(layout, m, n, a.data(), lda, ipiv.data());
+
+    // Copy L
+    for (std::size_t i = 0; i < m; i++) {
+      _l(i, i) = value_type(1.);
+    }
+    for (std::size_t i = 1; i < m; i++) {
+      for (std::size_t j = 0; j < i; j++) {
+        _l(i, j) = a(i, j);
+      }
+    }
+
+    // Copy U
+    for (std::size_t i = 0; i < m; i++) {
+      for (std::size_t j = i; j < n; j++) {
+        _u(i, j) = a(i, j);
+      }
+    }
+
+    // Set _p
+    for (std::size_t i = 0; i < q; i++) {
+      std::swap(_p[i], _p[ipiv[i] - 1]);
+    }
+  }
+
+  ten::tensor<T> l() const { return _l; }
+
+  ten::tensor<T> u() const { return _u; }
+
+  ten::tensor<T> p() const {
+    ten::tensor<T> p = ::ten::zeros<T>({_l.dim(0), _l.dim(1)});
+    for (size_t i = 0; i < _p.size(); i++) {
+      p(_p(i), i) = T(1);
+    }
+    return p;
+  }
+
+  std::tuple<ten::tensor<T>, ten::tensor<T>, ten::tensor<T>> factors() const {
+    return std::make_tuple(p(), _l, _u);
+  }
+};
+
+/// LU factorization of a matrix, returns the factors
+template <Tensor T> auto lu(T &&a) -> decltype(auto) {
+  using value_type = typename std::remove_cvref_t<T>::value_type;
+  lu_fact<value_type> lu;
+  lu.factorize(a);
+  return lu.factors();
+}
+
+// Cholesky factorization
+// Factorize a matrix A = LU = L L^T = U^T U
+template <class T = float> class cholesky_fact {
+public:
+  using value_type = T;
+
+private:
+  ten::tensor<T> _l;
+  ten::tensor<T> _u;
+
+public:
+  cholesky_fact()
+      : _l(tensor<T>::make_default()), _u(tensor<T>::make_default()) {}
+
+  void factorize(const ten::tensor<T> &a) {
+    ten::tensor<T> x = a.copy();
+
+    std::size_t m = x.dim(0);
+    std::size_t n = x.dim(1);
+    if (m != n) {
+      std::cerr << "Cholesky: input matrix is not square" << std::endl;
+    }
+
+    auto layout = x.storage_order();
+    std::size_t lda = x.is_transposed() ? n : m;
+    ::ten::kernels::lapack::cholesky_fact(layout, 'L', n, x.data(), lda);
+
+    _l = ::ten::zeros<T>({n, n});
+    _u = ::ten::zeros<T>({n, n});
+
+    // Copy L
+    for (std::size_t i = 0; i < m; i++) {
+      for (std::size_t j = 0; j < i + 1; j++) {
+        _l(i, j) = x(i, j);
+      }
+    }
+    // Copy U
+    for (std::size_t i = 0; i < m; i++) {
+      for (std::size_t j = 0; j < i + 1; j++) {
+        _u(j, i) = x(i, j);
+      }
+    }
+  }
+
+  ten::tensor<T> l() const { return _l; }
+
+  ten::tensor<T> u() const { return _u; }
+
+  std::tuple<ten::tensor<T>, ten::tensor<T>> factors() const {
+    return std::make_tuple(_l, _u);
+  }
+};
+
+/// Cholesky factorization of a matrix, returns the factors
+template <Tensor T> auto cholesky(T &&a) -> decltype(auto) {
+  using value_type = typename std::remove_cvref_t<T>::value_type;
+  cholesky_fact<value_type> chol;
+  chol.factorize(a);
+  return chol.factors();
+}
+
+/// SVD factorization
+/// Factorize a matrix A = U * Sigma * V^T
+template <class T = float> class svd_fact {
+public:
+  using value_type = T;
+
+private:
+  ten::tensor<T> _u;
+  ten::diagonal<T> _sigma;
+  ten::tensor<T> _vt;
+
+public:
+  svd_fact()
+      : _u(tensor<T>::make_default()), _sigma(diagonal<T>::make_default()),
+        _vt(tensor<T>::make_default()) {}
+
+  void factorize(const ten::tensor<T> &a) {
+    ten::tensor<T> x = a.copy();
+
+    std::size_t m = x.dim(0);
+    std::size_t n = x.dim(1);
+    auto layout = x.storage_order();
+    std::size_t lda = x.is_transposed() ? n : m;
+
+    _u = ::ten::zeros<T>({m, m});
+    _sigma = ::ten::diagonal<value_type>({m, n});
+    _vt = ::ten::zeros<T>({n, n});
+
+    ten::tensor<T> work({m * n});
+
+    ::ten::kernels::lapack::svd_fact(layout, 'A', 'A', m, n, x.data(), lda,
+                                     _sigma.data(), _u.data(), m, _vt.data(), n,
+                                     work.data());
+  }
+
+  ten::tensor<T> u() const { return _u; }
+
+  ten::diagonal<T> sigma() const { return _sigma; }
+
+  ten::tensor<T> vt() const { return _vt; }
+
+  std::tuple<ten::tensor<T>, ten::diagonal<T>, ten::tensor<T>> factors() const {
+    return std::make_tuple(_u, _sigma, _vt);
+  }
+};
+
+/// SVD factorization of a matrix, returns the factors
+template <Tensor T> auto svd(T &&a) -> decltype(auto) {
+  using value_type = typename std::remove_cvref_t<T>::value_type;
+  svd_fact<value_type> svd;
+  svd.factorize(a);
+  return svd.factors();
+}
+
+} // namespace linalg
+} // namespace ten
+
+#endif
