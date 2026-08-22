@@ -13,29 +13,42 @@ An expression API class for representing unary and binary operations between ten
 ## Features
 
 - [x] Multi dimensional dynamic arrays
-
-## Roadmap
-- [x] Dense tensors
-- [x] Diagonal matrices
+- [x] Special matrices (diagonal, triangular, transposed, ...)
+- [x] BLAS and LAPACK backend for high performance numerical linear algebra
 - [x] Lazy evaluation of expressions
-- [x] BLAS backend for high performance numerical linear algebra
-- [x] Factory functions: fill, ones, zeros, range, linear
-- [x] Random numbers generation: rand_norm and rand_unif
+- [x] Factory functions (fill, ones, zeros, range, linear)
+- [x] Probability distributions and random numbers generation
 - [x] Generate automatic python bindings ([tenpy](https://github.com/istmarc/tenpy))
 - [x] Tensor views and slicing
-- [] Automatic differentiation
+
+## Roadmap
 - [] Chain expressions
+- [] Automatic differentiation
 - [] Sparse tensors
 - [] Save and load binary data
 - [] Dataframe
 - [] Match and fuse operations
 - [] Inplace operations
-- [] Basic feed forward neural networks
 - [] CI/CD with tests
 - [] Python documentation
 - [] C++ doygen documentation
 - [] C++ API documentation
+
+## Long term
+- [] Linear algebra and least squares
+- [] Sorting
+- [] Combinatorics
+- [] Quasi random sequences
+- [] Tensor broadcasting
+- [] Statistics and hypothesis testing
+- [] Optimization
+- [] Machine learning
+- [] Basic feed forward neural networks
 - [] Neural netowrks (Convolution, RNNs, LSTM, ...)
+- [] Ordinary differential equations (ODEs)
+- [] Partial differential equations (PDEs)
+- [] Time series
+- [] Quantitative finance
 
 ## Requirements
 
@@ -199,6 +212,10 @@ cmake .. -DCMAKE_CXX_COMPILER=clang++ -DTEN_DOCS=ON
 cmake --build . --
 ```
 ## Build and install the python bindings
+
+**Required libraries**:
+- BLAS (Openblas or BLIS)
+- LAPACK
 
 ```shell
 mkdir build-bindings
