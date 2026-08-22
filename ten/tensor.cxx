@@ -42,27 +42,6 @@ using scalar_int64 = ten::scalar<int64_t>;
 using scalar_uint32 = ten::scalar<uint32_t>;
 using scalar_uint64 = ten::scalar<uint64_t>;
 
-// Scalar nodes
-/*
-using scalarnode_float = scalar_float::node_type;
-using scalarnode_double = scalar_double::node_type;
-using scalarnode_int32 = scalar_int32::node_type;
-using scalarnode_int64 = scalar_int64::node_type;
-using scalarnode_uint32 = scalar_uint32::node_type;
-using scalarnode_uint64 = scalar_uint64::node_type;
-*/
-
-// Tensor nodes
-/*
-using tensornode_float = tensor_float::node_type;
-using tensornode_double = tensor_double::node_type;
-using tensornode_int32 = tensor_int32::node_type;
-using tensornode_int64 = tensor_int64::node_type;
-using tensornode_uint32 = tensor_uint32::node_type;
-using tensornode_uint64 = tensor_uint64::node_type;
-using tensornode_bool = tensor_bool::node_type;
-*/
-
 ////////////////////////////////////////////////////////////////////////////////
 // Unary expr functions
 
@@ -165,7 +144,56 @@ template <typename T> auto py_pow(ten::tensor<T> &x, T n) {
   return ten::pow(x, n).eval();
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Binary func mul
+
+template <typename T> auto py_add(ten::tensor<T> &x, ten::tensor<T> &y) {
+  return (x + y).eval();
+}
+
+template <typename T> auto py_sub(ten::tensor<T> &x, ten::tensor<T> &y) {
+  return (x - y).eval();
+}
+
+template <typename T> auto py_mul(ten::tensor<T> &x, ten::tensor<T> &y) {
+  return (x * y).eval();
+}
+
+template <typename T> auto py_div(ten::tensor<T> &x, ten::tensor<T> &y) {
+  return (x / y).eval();
+}
+
+template <typename T> auto py_add_left(T s, ten::tensor<T> &x) {
+  return (s + x).eval();
+}
+
+template <typename T> auto py_add_right(ten::tensor<T> &x, T s) {
+  return (x + s).eval();
+}
+
+template <typename T> auto py_sub_left(T s, ten::tensor<T> &x) {
+  return (s - x).eval();
+}
+
+template <typename T> auto py_sub_right(ten::tensor<T> &x, T s) {
+  return (x - s).eval();
+}
+
+template <typename T> auto py_mul_left(T s, ten::tensor<T> &x) {
+  return (s * x).eval();
+}
+
+template <typename T> auto py_mul_right(ten::tensor<T> &x, T s) {
+  return (x * s).eval();
+}
+
+template <typename T> auto py_div_left(T s, ten::tensor<T> &x) {
+  return (s / x).eval();
+}
+
+template <typename T> auto py_div_right(ten::tensor<T> &x, T s) {
+  return (x / s).eval();
+}
 
 // Others binary functions
 
@@ -643,6 +671,44 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("pow_float", &py_pow<float>);
   m.def("pow_double", &py_pow<double>);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Binary functions
+  m.def("add_float", &py_add<float>);
+  m.def("add_double", &py_add<double>);
+
+  m.def("sub_float", &py_sub<float>);
+  m.def("sub_double", &py_sub<double>);
+
+  m.def("mul_float", &py_mul<float>);
+  m.def("mul_double", &py_mul<double>);
+
+  m.def("div_float", &py_div<float>);
+  m.def("div_double", &py_div<double>);
+
+  m.def("add_left_float", &py_add_left<float>);
+  m.def("add_left_double", &py_add_left<double>);
+
+  m.def("add_right_float", &py_add_right<float>);
+  m.def("add_right_double", &py_add_right<double>);
+
+  m.def("sub_left_float", &py_sub_left<float>);
+  m.def("sub_left_double", &py_sub_left<double>);
+
+  m.def("sub_right_float", &py_sub_right<float>);
+  m.def("sub_right_double", &py_sub_right<double>);
+
+  m.def("mul_left_float", &py_mul_left<float>);
+  m.def("mul_left_double", &py_mul_left<double>);
+
+  m.def("mul_right_float", &py_mul_right<float>);
+  m.def("mul_right_double", &py_mul_right<double>);
+
+  m.def("div_left_float", &py_div_left<float>);
+  m.def("div_left_double", &py_div_left<double>);
+
+  m.def("div_right_float", &py_div_right<float>);
+  m.def("div_right_double", &py_div_right<double>);
 
   /////////////////////////////////////////////////////////////////////////////
   // Distributions
