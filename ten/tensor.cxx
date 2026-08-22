@@ -53,6 +53,7 @@ using scalarnode_uint64 = scalar_uint64::node_type;
 */
 
 // Tensor nodes
+/*
 using tensornode_float = tensor_float::node_type;
 using tensornode_double = tensor_double::node_type;
 using tensornode_int32 = tensor_int32::node_type;
@@ -60,21 +61,7 @@ using tensornode_int64 = tensor_int64::node_type;
 using tensornode_uint32 = tensor_uint32::node_type;
 using tensornode_uint64 = tensor_uint64::node_type;
 using tensornode_bool = tensor_bool::node_type;
-
-////////////////////////////////////////////////////////////////////////////////
-// Functions
-/*
-template <typename T> auto min_py(T tensor) {
-   using value_type = T::value_type;
-   return ten::unary_expr<T, ten::scalar<value_type>, ten::functional::min>(
-       tensor);
-}
-
-template <typename T> auto max_py(T tensor) {
-   using value_type = T::value_type;
-   return ten::unary_expr<T, ten::scalar<value_type>, ten::functional::max>(
-       tensor);
-}*/
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // Unary expr functions
@@ -339,21 +326,24 @@ PYBIND11_MODULE(tencore, m) {
   m.doc() = "Ten core: Bindings for the ten library";
 
   // Scalars
-  py::class_<scalar_float>(m, "scalar_float").def(py::init<const float &>());
-  //.def("value", &scalar_float::value)
-  ; /*.def("__repr__", [](const scalar_float &s) {
-     std::stringstream ss;
-     ss << s;
-     return ss.str();
-   });*/
+  py::class_<scalar_float>(m, "scalar_float")
+      .def(py::init<const float &>())
+      .def("value", [](const scalar_float &s) { return s.value(); })
+      .def("__repr__", [](const scalar_float &s) {
+        std::stringstream ss;
+        ss << s;
+        return ss.str();
+      });
 
-  py::class_<scalar_double>(m, "scalar_double").def(py::init<const double &>());
-  //.def("value", &scalar_double::value)
-  ; /*.def("__repr__", [](const scalar_double &s) {
-     std::stringstream ss;
-     ss << s;
-     return ss.str();
-   });*/
+  py::class_<scalar_double>(m, "scalar_double")
+      .def(py::init<const double &>())
+      .def("value", [](const scalar_double &s) { return s.value(); })
+      .def("__repr__", [](const scalar_double &s) {
+        std::stringstream ss;
+        ss << s;
+        return ss.str();
+      });
+
   /*
  py::class_<scalar_int32>(m, "scalar_int32")
      .def(py::init<const int32_t &>())
