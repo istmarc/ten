@@ -533,6 +533,9 @@ void operator+=(left_expr &&left, right_expr &&right) {
 /// \class scalar
 /// Hold a single value of type T.
 template <typename T> class scalar : public expr {
+public:
+  using value_type = T;
+
 private:
   bool _requires_grad = false;
   std::shared_ptr<T> _value = nullptr;
@@ -3222,16 +3225,18 @@ static void gemm(const T alpha, X &&x, Y &&y, const T beta, C &c) {
 }*/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TODO functions
+/// Functions
 
-/*
 /// \fn min
 /// Returns the maximum of an expression
 template <Expr ExprType> auto min(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
   using value_type = typename expr_type::value_type;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = ten::scalar<value_type>;
-  return unary_expr<expr_type, output_type, functional::min>(expr);
+  using func_type = ten::functional::min<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn max
@@ -3239,8 +3244,11 @@ template <Expr ExprType> auto min(ExprType &&expr) {
 template <Expr ExprType> auto max(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
   using value_type = typename expr_type::value_type;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = ten::scalar<value_type>;
-  return unary_expr<expr_type, output_type, functional::max>(expr);
+  using func_type = ten::functional::max<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn mean
@@ -3248,8 +3256,11 @@ template <Expr ExprType> auto max(ExprType &&expr) {
 template <Expr ExprType> auto mean(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
   using value_type = typename expr_type::value_type;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = ten::scalar<value_type>;
-  return unary_expr<expr_type, output_type, functional::mean>(expr);
+  using func_type = ten::functional::mean<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn sum
@@ -3257,16 +3268,22 @@ template <Expr ExprType> auto mean(ExprType &&expr) {
 template <Expr ExprType> auto sum(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
   using value_type = typename expr_type::value_type;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = ten::scalar<value_type>;
-  return unary_expr<expr_type, output_type, functional::sum>(expr);
+  using func_type = ten::functional::sum<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn cum_sum
 /// Return the cumulative sum of a tensor or an expression
 template <Expr ExprType> auto cum_sum(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::cum_sum>(expr);
+  using func_type = ten::functional::cum_sum<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn prod
@@ -3274,17 +3291,23 @@ template <Expr ExprType> auto cum_sum(ExprType &&expr) {
 template <Expr ExprType> auto prod(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
   using value_type = typename expr_type::value_type;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = ten::scalar<value_type>;
-  return unary_expr<expr_type, output_type, functional::prod>(expr);
+  using func_type = ten::functional::prod<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn abs
 /// Returns the absolute value of a scalar, a tensor or an expression
 template <Expr ExprType> auto abs(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::abs>(expr);
-}*/
+  using func_type = ten::functional::abs<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
+}
 
 /// \fn sqrt
 /// Returns the square root of a scalar, a tensor or an expression
@@ -3308,123 +3331,166 @@ template <Expr ExprType> auto sqr(ExprType &&expr) {
   return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
-/*
 /// \fn sin
 /// Returns the sine of a scalar, a tensor or an expression
 template <Expr ExprType> auto sin(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::sin>(expr);
+  using func_type = ten::functional::sin<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn sinh
 /// Hyperbolic sine
 template <Expr ExprType> auto sinh(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::sinh>(expr);
+  using func_type = ten::functional::sinh<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn asin
 /// Arc sine
 template <Expr ExprType> auto asin(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::asin>(expr);
+  using func_type = ten::functional::asin<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn cos
 /// Returns the cosine of a scalar, a tensor or an expression
 template <Expr ExprType> auto cos(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::cos>(expr);
+  using func_type = ten::functional::cos<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn acos
 template <Expr ExprType> auto acos(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::acos>(expr);
+  using func_type = ten::functional::acos<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn cosh
 template <Expr ExprType> auto cosh(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::cosh>(expr);
+  using func_type = ten::functional::cosh<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn tan
 /// Returns the tangent of a scalar, a tensor or an expression
 template <Expr ExprType> auto tan(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::tan>(expr);
+  using func_type = ten::functional::tan<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn atan
 template <Expr ExprType> auto atan(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::atan>(expr);
+  using func_type = ten::functional::atan<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn tanh
 template <Expr ExprType> auto tanh(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::tanh>(expr);
+  using func_type = ten::functional::tanh<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn exp
-/// Returns the tangent of a scalar, a tensor or an expression
+/// Returns the exponential of a scalar, a tensor or an expression
 template <Expr ExprType> auto exp(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::exp>(expr);
+  using func_type = ten::functional::exp<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn log
-/// Returns the tangent of a scalar, a tensor or an expression
+/// Returns the natural logarithm of a tensor or an expression
 template <Expr ExprType> auto log(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::log>(expr);
+  using func_type = ten::functional::log<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn log10
 template <Expr ExprType> auto log10(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::log10>(expr);
+  using func_type = ten::functional::log10<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn floor
 template <Expr ExprType> auto floor(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::floor>(expr);
+  using func_type = ten::functional::floor<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
 /// \fn ceil
 template <Expr ExprType> auto ceil(ExprType &&expr) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::ceil>(expr);
-}*/
+  using func_type = ten::functional::ceil<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO Parameteric functions
 
-/*
 /// \fn pow
 /// Power
 template <Expr ExprType, class T = float> auto pow(ExprType &&expr, T n) {
   using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
-  return unary_expr<expr_type, output_type, functional::pow>(expr, n);
-}*/
+  using func_type = ten::functional::pow<input_type, output_type>;
+  func_type *f = new func_type(n);
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO Neural networks (activation functions and layers)
@@ -3482,9 +3548,11 @@ bool all_close(const T &t, double eps) {
 template <class T>
 tensor<T> like(const tensor<T> &x, std::optional<bool> requires_grad) {
   if (requires_grad.has_value()) {
-    return tensor<T>(x.shape(), x.format(), requires_grad.value(), x.order());
+    return tensor<T>(x.shape(), x.format(), requires_grad.value(),
+                     x.storage_order());
   } else {
-    return tensor<T>(x.shape(), x.format(), x.requires_grad(), x.order());
+    return tensor<T>(x.shape(), x.format(), x.requires_grad(),
+                     x.storage_order());
   }
 }
 

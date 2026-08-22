@@ -597,7 +597,7 @@ struct mean : func {
     for (size_t i = 0; i < x->size(); i++) {
       res += static_cast<type>((*x.get())[i]);
     }
-    y->value() = res / x.size();
+    y->value() = res / x->size();
   }
 
   /*
@@ -621,7 +621,7 @@ struct sum : func {
 
   using output_type = Y;
 
-  void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
+  void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
       y = std::make_shared<Y>();
     }
@@ -1194,7 +1194,7 @@ struct floor : func {
 template <class X, class Y>
   requires(
       (::ten::is_tensor_v<X> || ::ten::is_column_v<X> || ::ten::is_row_v<X>) &&
-       ::ten::is_tensor_v<Y>)
+      ::ten::is_tensor_v<Y>)
 struct ceil : func {
   static constexpr std::string name() { return std::string("ceil"); }
 
