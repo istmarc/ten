@@ -436,7 +436,8 @@ struct abs : func {
     }
     if constexpr (::ten::is_tensor_v<Y>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
       for (size_t i = 0; i < x->size(); i++) {
         (*y.get())[i] = std::abs(static_cast<value_type>((*x.get())[i]));
@@ -502,10 +503,11 @@ public:
     }
     if constexpr (::ten::is_tensor_v<Y>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
-      for (size_t i = 0; i < x.size(); i++) {
-        y[i] = std::pow(x[i], _n);
+      for (std::size_t i = 0; i < x->size(); i++) {
+        (*y.get())[i] = std::pow((*x.get())[i], _n);
       }
     }
   }
@@ -544,7 +546,7 @@ struct min : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>();
+      y = std::make_shared<Y>(x->requires_grad());
     }
     using type = typename X::value_type;
     type res = (*x.get())[0];
@@ -567,7 +569,7 @@ struct max : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>();
+      y = std::make_shared<Y>(x->requires_grad());
     }
     using type = typename Y::value_type;
     type res = (*x.get())[0];
@@ -590,10 +592,10 @@ struct mean : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>();
+      y = std::make_shared<Y>(x->requires_grad());
     }
     using type = typename Y::value_type;
-    type res = 0.;
+    type res = type(0);
     for (size_t i = 0; i < x->size(); i++) {
       res += static_cast<type>((*x.get())[i]);
     }
@@ -623,10 +625,10 @@ struct sum : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>();
+      y = std::make_shared<Y>(x->requires_grad());
     }
     using type = typename Y::value_type;
-    type res = 0.;
+    type res = type(0);
     for (size_t i = 0; i < x->size(); i++) {
       res += static_cast<type>((*x.get())[i]);
     }
@@ -659,7 +661,8 @@ struct cum_sum : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>(x->shape());
+      y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                              x->storage_order());
     }
     using type = typename Y::value_type;
     auto yarr = *(y.get());
@@ -683,10 +686,10 @@ struct prod : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>();
+      y = std::make_shared<Y>(x->requires_grad());
     }
     using type = typename Y::value_type;
-    type res = 1.;
+    type res = type(1);
     for (size_t i = 0; i < x->size(); i++) {
       res *= static_cast<type>((*x.get())[i]);
     }
@@ -717,7 +720,8 @@ struct sin : func {
     }
     if constexpr (::ten::is_tensor_v<Y>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
       for (size_t i = 0; i < x->size(); i++) {
         (*y.get())[i] = std::sin(static_cast<type>((*x.get())[i]));
@@ -757,7 +761,8 @@ struct asin : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>(x->shape());
+      y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                              x->storage_order());
     }
     using type = typename Y::value_type;
     for (size_t i = 0; i < x->size(); i++) {
@@ -778,7 +783,8 @@ struct sinh : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>(x->shape());
+      y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                              x->storage_order());
     }
     using type = typename Y::value_type;
     for (size_t i = 0; i < x->size(); i++) {
@@ -809,7 +815,8 @@ struct cos : func {
     }
     if constexpr (::ten::is_tensor_v<Y>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
       for (size_t i = 0; i < x->size(); i++) {
         (*y.get())[i] = std::cos(static_cast<output_value_type>((*x.get())[i]));
@@ -857,7 +864,8 @@ struct acos : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>(x->shape());
+      y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                              x->storage_order());
     }
     using type = typename Y::value_type;
     for (size_t i = 0; i < x->size(); i++) {
@@ -878,7 +886,8 @@ struct cosh : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>(x->shape());
+      y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                              x->storage_order());
     }
     using type = typename Y::value_type;
     for (size_t i = 0; i < x->size(); i++) {
@@ -909,7 +918,8 @@ struct tan : func {
     }
     if constexpr (::ten::is_tensor_v<Y>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
       for (size_t i = 0; i < x->size(); i++) {
         (*y.get())[i] = std::tan(static_cast<output_value_type>((*x.get())[i]));
@@ -961,7 +971,8 @@ struct atan : func {
     }
     if constexpr (::ten::is_tensor_v<Y>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
       for (size_t i = 0; i < x->size(); i++) {
         (*y.get())[i] = std::atan(static_cast<type>((*x.get())[i]));
@@ -1011,7 +1022,8 @@ struct tanh : func {
     }
     if constexpr (::ten::is_tensor_v<Y>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
       for (size_t i = 0; i < x->size(); i++) {
         (*y.get())[i] = std::tanh(static_cast<type>((*x.get())[i]));
@@ -1042,7 +1054,8 @@ struct exp : func {
     }
     if constexpr (::ten::is_tensor_v<Y>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
       for (size_t i = 0; i < x->size(); i++) {
         (*y.get())[i] = std::exp(static_cast<type>((*x.get())[i]));
@@ -1092,7 +1105,8 @@ struct log : func {
     }
     if constexpr (::ten::is_tensor_v<Y>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
       for (size_t i = 0; i < x->size(); i++) {
         (*y.get())[i] = std::log(static_cast<type>((*x.get())[i]));
@@ -1141,7 +1155,8 @@ struct log10 : func {
     }
     if constexpr (::ten::is_tensor_v<Y>) {
       if (!y) {
-        y = std::make_shared<Y>(x->shape());
+        y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
       }
       for (size_t i = 0; i < x->size(); i++) {
         (*y.get())[i] = std::log10(static_cast<type>((*x.get())[i]));
@@ -1181,7 +1196,8 @@ struct floor : func {
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
     if (!y) {
-      y = std::make_shared<Y>(x->shape());
+      y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                              x->storage_order());
     }
     using type = typename Y::value_type;
     for (size_t i = 0; i < x->size(); i++) {
@@ -1201,22 +1217,13 @@ struct ceil : func {
   using output_type = Y;
 
   void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
-    if constexpr (Y::is_dynamic()) {
-      if (!y) {
-        y = std::make_shared<Y>(x->shape());
-      }
-      using type = typename Y::value_type;
-      for (size_t i = 0; i < x->size(); i++) {
-        (*y.get())[i] = std::ceil(static_cast<type>((*x.get())[i]));
-      }
-    } else {
-      if (!y) {
-        y = std::make_shared<Y>();
-      }
-      using type = typename Y::value_type;
-      for (size_t i = 0; i < X::static_size(); i++) {
-        (*y.get())[i] = std::ceil(static_cast<type>((*x.get())[i]));
-      }
+    if (!y) {
+      y = std::make_shared<Y>(x->shape(), x->format(), x->requires_grad(),
+                              x->storage_order());
+    }
+    using type = typename Y::value_type;
+    for (size_t i = 0; i < x->size(); i++) {
+      (*y.get())[i] = std::ceil(static_cast<type>((*x.get())[i]));
     }
   }
 };
