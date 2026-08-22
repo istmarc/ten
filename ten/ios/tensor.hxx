@@ -14,12 +14,23 @@ std::ostream &operator<<(std::ostream &os, const ::ten::scalar<T> &s) {
   return os;
 }
 
+/// Print shape
+static void print_shape(std::ostream &os,
+                        const std::vector<std::size_t> &dims) {
+  os << dims[0];
+  for (std::size_t i = 1; i < dims.size(); i++) {
+    os << "x" << dims[i];
+  }
+}
+
 /// Overload << operator for tensor
 template <class T>
 std::ostream &operator<<(std::ostream &os, const tensor<T> &t) {
   const size_t rank = t.rank();
   if (rank == 1) {
-    os << "tensor<" << ::ten::to_string<T>() << ">"; // << t.shape() << ">";
+    os << "tensor<" << ::ten::to_string<T>() << ",";
+    print_shape(os, t.shape());
+    os << ">";
     std::size_t size = t.size();
     if (size <= 10) {
       for (std::size_t i = 0; i < t.size(); i++) {
@@ -35,8 +46,9 @@ std::ostream &operator<<(std::ostream &os, const tensor<T> &t) {
       }
     }
   } else if (rank == 2) {
-    os << "tensor<" << ::ten::to_string<T>() << ">";
-    // "," << t.shape() << ">";
+    os << "tensor<" << ::ten::to_string<T>() << ",";
+    print_shape(os, t.shape());
+    os << ">";
     std::size_t m = t.dim(0);
     std::size_t n = t.dim(1);
     for (std::size_t i = 0; i < m; i++) {
@@ -55,7 +67,9 @@ std::ostream &operator<<(std::ostream &os, const tensor<T> &t) {
 /// Overload << operator for diagonal matrix
 template <class T>
 std::ostream &operator<<(std::ostream &os, const diagonal<T> &t) {
-  os << "diagonal<" << ::ten::to_string<T>() << ">"; // << t.shape() << ">";
+  os << "diagonal<" << ::ten::to_string<T>() << ",";
+  print_shape(os, t.shape());
+  os << ">\n";
   std::size_t size = t.size();
   if (size <= 10) {
     for (std::size_t i = 0; i < t.size(); i++) {

@@ -1,6 +1,7 @@
 #ifndef TEN_FUNCTIONAL_HXX
 #define TEN_FUNCTIONAL_HXX
 
+#include "kernels/binary_ops.hxx"
 #include <cmath>
 #include <initializer_list>
 #include <memory>
@@ -8,6 +9,7 @@
 
 #include <ten/kernels/host>
 #include <ten/types.hxx>
+#include <ten/utils.hxx>
 
 namespace ten {
 enum class binary_operation;
@@ -40,246 +42,81 @@ template <Tensor X, Scalar Y> struct common_type<X, Y> {
 template <class X, class Y>
 using common_type_t = typename common_type<X, Y>::type;
 
-/*
+/// Multiplication result
 template <class, class> struct mul_result;
 
-template <class A, class B>
-using mul_result_t = typename mul_result<A, B>::type;
+template <class X, class Y>
+using mul_result_t = typename mul_result<X, Y>::type;
 
 // scalar * scalar
-template <Scalar A, Scalar B> struct mul_result<A, B> {
-   using value_type =
-       std::common_type_t<typename A::value_type, typename B::value_type>;
-   using type = ::ten::scalar<value_type>;
+template <Scalar X, Scalar Y> struct mul_result<X, Y> {
+  using value_type =
+      std::common_type_t<typename X::value_type, typename Y::value_type>;
+  using type = ::ten::scalar<value_type>;
 };
 
-// vector * vector
-template <Vector A, Vector B>
-   requires(A::is_dynamic() && B::is_dynamic() && same_shape<A, B> &&
-            same_storage_order<A, B> && same_storage<A, B> &&
-            same_allocator<A, B>)
-struct mul_result<A, B> {
-   using value_type =
-       std::common_type_t<typename A::value_type, typename B::value_type>;
-   using type =
-       ranked_tensor<value_type, typename A::shape_type, A::storage_order(),
-                     typename A::storage_type, typename A::allocator_type>;
-};
-
-// svector * svector
-template <StaticVector A, StaticVector B>
-   requires(A::is_static() && B::is_static() && same_shape<A, B> &&
-            same_storage_order<A, B> && same_storage<A, B> &&
-            same_allocator<A, B>)
-struct mul_result<A, B> {
-   using value_type =
-       std::common_type_t<typename A::value_type, typename B::value_type>;
-   using type =
-       ranked_tensor<value_type, typename A::shape_type, A::storage_order(),
-                     typename A::storage_type, typename A::allocator_type>;
-};
-
-// matrix * matrix
-template <Matrix A, Matrix B>
-   requires(same_storage_order<A, B> && same_storage<A, B> &&
-            same_allocator<A, B>)
-struct mul_result<A, B> {
-   using value_type =
-       std::common_type_t<typename A::value_type, typename B::value_type>;
-   using type =
-       ranked_tensor<value_type,
-                     ::ten::shape<A::shape_type::template static_dim<0>(),
-                                  B::shape_type::template static_dim<1>()>,
-                     A::storage_order(), typename A::storage_type,
-                     typename A::allocator_type>;
-};
-
-// smatrix * smatrix
-template <StaticMatrix A, StaticMatrix B>
-   requires(same_storage_order<A, B> && same_allocator<A, B>)
-struct mul_result<A, B> {
-   static_assert(A::shape_type::template static_dim<1>() ==
-                     B::shape_type::template static_dim<0>(),
-                 "ten::functional::mul_resul incompatible matrice shapes.\n");
-   using value_type =
-       std::common_type_t<typename A::value_type, typename B::value_type>;
-
-   using shape_type = ::ten::shape<A::shape_type::template static_dim<0>(),
-                                   B::shape_type::template static_dim<1>()>;
-   using type =
-       ranked_tensor<value_type, shape_type, A::storage_order(),
-                     ten::default_storage<value_type, shape_type>, void>;
-};
-
-// matrix * vector
-template <Matrix A, Vector B>
-   requires(same_storage_order<A, B> && same_storage<A, B> &&
-            same_allocator<A, B>)
-struct mul_result<A, B> {
-   using value_type =
-       std::common_type_t<typename A::value_type, typename B::value_type>;
-   using type =
-       ranked_tensor<value_type, shape<A::shape_type::template static_dim<0>()>,
-                     A::storage_order(), typename A::storage_type,
-                     typename A::allocator_type>;
-};
-
-// smatrix * svector
-template <class A, class B>
-   requires(::ten::is_smatrix_v<A> && ::ten::is_svector_v<B> &&
-            same_storage_order<A, B> && same_allocator<A, B>)
-struct mul_result<A, B> {
-   static_assert(A::shape_type::template static_dim<1>() ==
-                     B::shape_type::template static_dim<0>(),
-                 "ten::functional::mul_result Incompatible static matrix and "
-                 "static vector sizes.");
-
-   using value_type =
-       std::common_type_t<typename A::value_type, typename B::value_type>;
-   using type =
-       ranked_tensor<value_type, shape<A::shape_type::template static_dim<0>()>,
-                     A::storage_order(), typename A::storage_type,
-                     typename A::allocator_type>;
+// tensor * tensor
+template <Tensor X, Tensor Y> struct mul_result<X, Y> {
+  using value_type =
+      std::common_type_t<typename X::value_type, typename Y::value_type>;
+  using type = tensor<value_type>;
 };
 
 // scalar * tensor
-// template <Scalar A, Tensor B> struct mul_result<A, B> {
-//   using type = B;
-//};
-
-// tensor * tensor
-template <Tensor X, Tensor Y>
-   requires(X::order() >= 3 && Y::order() >= 3 && same_shape<X, Y> &&
-            same_storage_order<X, Y> && same_storage<X, Y> &&
-            same_allocator<X, Y>)
-struct mul_result<X, Y> {
-   using value_type =
-       std::common_type_t<typename X::value_type, typename Y::value_type>;
-   using type =
-       ranked_tensor<value_type, typename X::shape_type, X::storage_order(),
-                     typename X::storage_type, typename X::allocator_type>;
+template <Scalar X, Tensor Y> struct mul_result<X, Y> {
+  using type = Y;
 };
 
-// stensor * stensor
-template <StaticTensor X, StaticTensor Y>
-   requires(X::order() >= 3 && Y::order() >= 3 && same_shape<X, Y> &&
-            same_storage_order<X, Y> && same_storage<X, Y> &&
-            same_allocator<X, Y>)
-struct mul_result<X, Y> {
-   using value_type =
-       std::common_type_t<typename X::value_type, typename Y::value_type>;
-   using type =
-       ranked_tensor<value_type, typename X::shape_type, X::storage_order(),
-                     typename X::storage_type, typename X::allocator_type>;
+// tensor * scalar
+template <Tensor X, Scalar Y> struct mul_result<X, Y> {
+  using type = X;
 };
 
 /// scalar * unary_expr
-template <Scalar A, UnaryExpr B> struct mul_result<A, B> {
-   using type = std::remove_cvref_t<B>::output_type;
+template <Scalar X, UnaryExpr Y> struct mul_result<X, Y> {
+  using type = std::remove_cvref_t<Y>::output_type;
 };
 
 /// scalar * binary_expr
-template <Scalar A, BinaryExpr B> struct mul_result<A, B> {
-   using type = std::remove_cvref_t<B>::output_type;
+template <Scalar X, BinaryExpr Y> struct mul_result<X, Y> {
+  using type = std::remove_cvref_t<Y>::output_type;
 };
 
-/// UnaryExpr * vector
-template <UnaryExpr A, Vector B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
+/// unary_expr * scalar
+template <UnaryExpr X, Scalar Y> struct mul_result<X, Y> {
+  using type = std::remove_cvref_t<X>::output_type;
 };
 
-/// UnaryExpr * svector
-template <UnaryExpr A, StaticVector B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
+/// binary_expr * scalar
+template <BinaryExpr X, Scalar Y> struct mul_result<X, Y> {
+  using type = std::remove_cvref_t<X>::output_type;
 };
 
-/// BinaryExpr * vector
-template <BinaryExpr A, Vector B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
+/// unary_expr * tensor
+template <UnaryExpr X, Tensor Y> struct mul_result<X, Y> {
+  using evaluated_type = std::remove_cvref_t<X>::output_type;
+  using type = mul_result_t<evaluated_type, Y>;
 };
 
-/// BinaryExpr * svector
-template <BinaryExpr A, StaticVector B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
+/// binary_expr * tensor
+template <BinaryExpr X, Tensor Y> struct mul_result<X, Y> {
+  using evaluated_type = std::remove_cvref_t<X>::output_type;
+  using type = mul_result_t<evaluated_type, Y>;
 };
 
-/// UnaryExpr * matrix
-template <UnaryExpr A, Matrix B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
+/// tensor * unary_expr
+template <Tensor X, UnaryExpr Y> struct mul_result<X, Y> {
+  using evaluated_type = std::remove_cvref_t<Y>::output_type;
+  using type = mul_result_t<evaluated_type, X>;
 };
 
-/// UnaryExpr * smatrix
-template <UnaryExpr A, StaticMatrix B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
+/// tensor * binary_expr
+template <Tensor X, BinaryExpr Y> struct mul_result<X, Y> {
+  using evaluated_type = std::remove_cvref_t<Y>::output_type;
+  using type = mul_result_t<evaluated_type, X>;
 };
 
-/// matrix * UnaryExpr
-template <Matrix A, UnaryExpr B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<B>::output_type;
-   using type = mul_result<evaluated_type, A>::type;
-};
-
-/// smatrix * UnaryExpr
-template <StaticMatrix A, UnaryExpr B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<B>::output_type;
-   using type = mul_result<evaluated_type, A>::type;
-};
-
-/// BinaryExpr * matrix
-template <BinaryExpr A, Matrix B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
-};
-
-/// BinaryExpr * smatrix
-template <BinaryExpr A, StaticMatrix B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
-};
-
-/// Matrix * BinaryExpr
-template <Matrix A, BinaryExpr B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<B>::output_type;
-   using type = mul_result<evaluated_type, A>::type;
-};
-
-/// Smatrix * BinaryExpr
-template <StaticMatrix A, BinaryExpr B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<B>::output_type;
-   using type = mul_result<evaluated_type, A>::type;
-};
-
-/// UnaryExpr * tensor
-template <UnaryExpr A, Tensor B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
-};
-
-/// UnaryExpr * stensor
-template <UnaryExpr A, StaticTensor B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
-};
-
-/// BinaryExpr * tensor
-template <BinaryExpr A, Tensor B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
-};
-
-/// BinaryExpr * stensor
-template <BinaryExpr A, StaticTensor B> struct mul_result<A, B> {
-   using evaluated_type = std::remove_cvref_t<A>::output_type;
-   using type = mul_result<evaluated_type, B>::type;
-};
-*/
-
+/*
 // TODO reshape result
 template <class X> struct reshape_result {
   using type = tensor<typename X::value_type>;
@@ -288,7 +125,7 @@ template <class X> struct reshape_result {
 // dynamic transpose result
 template <class X> struct transpose_result {
   using type = tensor<typename X::value_type>;
-};
+};*/
 
 } // namespace ten::details
 
@@ -1232,300 +1069,282 @@ struct ceil : func {
 // Binary functions (Add, Sub, Mul and Div)
 
 /// Binary function
-/*
-template <::ten::binary_operation Kind> struct binary_func {
+template <ten::binary_operation Kind> struct binary_func {
 
-   template <class X, class Y, class Z>
-   struct func : ::ten::functional::func<> {
-      static constexpr std::string name() {
-         if constexpr (Kind == ::ten::binary_operation::add) {
-            return std::string("add");
-         }
-         if constexpr (Kind == ::ten::binary_operation::sub) {
-            return std::string("sub");
-         }
-         if constexpr (Kind == ::ten::binary_operation::mul) {
-            return std::string("mul");
-         }
-         if constexpr (Kind == ::ten::binary_operation::div) {
-            return std::string("div");
-         }
+  template <class X, class Y, class Z> struct func : ::ten::functional::func {
+    static constexpr std::string name() {
+      if constexpr (Kind == ::ten::binary_operation::add) {
+        return std::string("add");
       }
-
-      using output_type = Z;
-
-      void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
-                      std::shared_ptr<Z> &z) {
-         if constexpr (Z::is_dynamic()) {
-            if (x->shape() != y->shape()) {
-               std::cerr << "ten::functional::binary_func<" << name()
-                         << ">, input have different shapes\n";
-            } else {
-               if (!z) {
-                  z = std::make_shared<Z>(x->shape());
-               }
-               auto xarr = *x.get();
-               auto yarr = *y.get();
-               auto zarr = *z.get();
-               ::ten::kernels::binary_ops<Kind>(xarr, yarr, zarr);
-            }
-         } else {
-            if (!std::is_same_v<typename X::shape_type,
-                                typename Y::shape_type>) {
-               std::cerr << "ten::functional::binary_func<" << name()
-                         << ">, input have different shapes\n";
-            } else {
-               if (!z) {
-                  z = std::make_shared<Z>();
-               }
-               ::ten::kernels::binary_ops<Kind>(*y.get(), *y.get(), *z.get());
-            }
-         }
+      if constexpr (Kind == ::ten::binary_operation::sub) {
+        return std::string("sub");
       }
-
-      // Compute dz(x,y)/dx in grad
-      template <class Gradient>
-         requires(::ten::is_tensor_v<Gradient>)
-      //void gradient_left(const X & x, const Y &y, Gradient &grad) {
-         if (y.shape() != grad.shape()) {
-            std::cerr << "ten::functional::binary_func<" << name()
-                      << "> gradient ";
-            std::cerr << "different shapes.\n";
-         } else {
-            if constexpr ((Kind == ::ten::binary_operation::add) ||
-                          (Kind == ::ten::binary_operation::sub)) {
-               for (size_t i = 0; i < grad.size(); i++) {
-                  grad[i] = 1;
-               }
-            }
-            if (Kind == ::ten::binary_operation::mul) {
-               for (size_t i = 0; i < grad.size(); i++) {
-                  grad[i] = y[i];
-               }
-            }
-            if (Kind == ::ten::binary_operation::div) {
-               for (size_t i = 0; i < grad.size(); i++) {
-                  grad[i] = 1 / y[i];
-               }
-            }
-         }
+      if constexpr (Kind == ::ten::binary_operation::mul) {
+        return std::string("mul");
       }
-
-      template <class Gradient>
-         requires(::ten::is_stensor_v<Gradient>)
-      void gradient_left(const X & x, const Y &y, Gradient &grad) {
-         if constexpr (!std::is_same_v<typename Y::shape_type,
-                                       typename Gradient::shape_type>) {
-            std::cerr << "ten::functional::binary_func<" << name()
-                      << "> gradient ";
-            std::cerr << "different shapes.\n";
-         } else {
-            if constexpr ((Kind == ::ten::binary_operation::add) ||
-                          (Kind == ::ten::binary_operation::sub)) {
-               for (size_t i = 0; i < Gradient::static_size(); i++) {
-                  grad[i] = 1;
-               }
-            }
-            if (Kind == ::ten::binary_operation::mul) {
-               for (size_t i = 0; i < Gradient::static_size(); i++) {
-                  grad[i] = y[i];
-               }
-            }
-            if (Kind == ::ten::binary_operation::div) {
-               for (size_t i = 0; i < Gradient::static_size(); i++) {
-                  grad[i] = 1 / y[i];
-               }
-            }
-         }
+      if constexpr (Kind == ::ten::binary_operation::div) {
+        return std::string("div");
       }
+    }
 
-      // Compute dz(x,y)/dy in grad
-      template <class Gradient>
-         requires(::ten::is_tensor_v<Gradient>)
-      void gradient_right(const X &x, const Y &y, Gradient &grad) {
-         if ((x.shape() != grad.shape()) || (y.shape() != grad.shape())) {
-            std::cerr << "ten::functional::binary_func<" << name()
-                      << "> gradient ";
-            std::cerr << "different shapes.\n";
-         } else {
-            if constexpr (Kind == ::ten::binary_operation::add) {
-               for (size_t i = 0; i < grad.size(); i++) {
-                  grad[i] = 1;
-               }
-            }
-            if constexpr (Kind == ::ten::binary_operation::sub) {
-               for (size_t i = 0; i < grad.size(); i++) {
-                  grad[i] = -1;
-               }
-            }
-            if (Kind == ::ten::binary_operation::mul) {
-               for (size_t i = 0; i < grad.size(); i++) {
-                  grad[i] = x[i];
-               }
-            }
-            if (Kind == ::ten::binary_operation::div) {
-               for (size_t i = 0; i < grad.size(); i++) {
-                  grad[i] = -x[i] / (y[i] * y[i]);
-               }
-            }
-         }
-      }
+    using output_type = Z;
 
-      template <class Gradient>
-         requires(::ten::is_stensor_v<Gradient>)
-      void gradient_right(const X &x, const Y &y, Gradient &grad) {
-         if (!std::is_same_v<typename X::shape_type,
-                             typename Gradient::shape_type> ||
-             !std::is_same_v<typename Y::shape_type,
-                             typename Gradient::shape_type>) {
-            std::cerr << "ten::functional::binary_func<" << name()
-                      << "> gradient ";
-            std::cerr << "different shapes.\n";
-         } else {
-            if constexpr (Kind == ::ten::binary_operation::add) {
-               for (size_t i = 0; i < Gradient::static_size(); i++) {
-                  grad[i] = 1;
-               }
-            }
-            if constexpr (Kind == ::ten::binary_operation::sub) {
-               for (size_t i = 0; i < Gradient::static_size(); i++) {
-                  grad[i] = -1;
-               }
-            }
-            if (Kind == ::ten::binary_operation::mul) {
-               for (size_t i = 0; i < Gradient::static_size(); i++) {
-                  grad[i] = x[i];
-               }
-            }
-            if (Kind == ::ten::binary_operation::div) {
-               for (size_t i = 0; i < Gradient::static_size(); i++) {
-                  grad[i] = -x[i] / (y[i] * y[i]);
-               }
-            }
-         }
+    void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
+              std::shared_ptr<Z> &z) {
+      if (!ten::details::same_shape(x->shape(), y->shape())) {
+        std::cerr << "ten::functional::binary_func<" << name()
+                  << ">, input have different shapes\n";
+      } else if (!x->is_dense() || !y->is_dense()) {
+        std::cerr << "ten::fuctional::binary_fun<" << name()
+                  << ">, tensor storage format must be dense.\n";
+      } else if (x->storage_order() != y->storage_order()) {
+        std::cerr << "ten::functional::binary_fun<" << name()
+                  << ">, different storage order.\n";
+      } else {
+        if (!z) {
+          z = std::make_shared<Z>(x->shape(), ten::storage_format::dense,
+                                  x->requires_grad() || y->requires_grad(),
+                                  x->storage_order());
+        }
+        auto xarr = *x.get();
+        auto yarr = *y.get();
+        auto zarr = *z.get();
+        ::ten::kernels::binary_ops<Kind>(xarr, yarr, zarr);
       }
-   };
+    }
+
+    /*
+    // Compute dz(x,y)/dx in grad
+    template <class Gradient>
+       requires(::ten::is_tensor_v<Gradient>)
+    //void gradient_left(const X & x, const Y &y, Gradient &grad) {
+       if (y.shape() != grad.shape()) {
+          std::cerr << "ten::functional::binary_func<" << name()
+                    << "> gradient ";
+          std::cerr << "different shapes.\n";
+       } else {
+          if constexpr ((Kind == ::ten::binary_operation::add) ||
+                        (Kind == ::ten::binary_operation::sub)) {
+             for (size_t i = 0; i < grad.size(); i++) {
+                grad[i] = 1;
+             }
+          }
+          if (Kind == ::ten::binary_operation::mul) {
+             for (size_t i = 0; i < grad.size(); i++) {
+                grad[i] = y[i];
+             }
+          }
+          if (Kind == ::ten::binary_operation::div) {
+             for (size_t i = 0; i < grad.size(); i++) {
+                grad[i] = 1 / y[i];
+             }
+          }
+       }
+    }
+
+    // Compute dz(x,y)/dy in grad
+    template <class Gradient>
+       requires(::ten::is_tensor_v<Gradient>)
+    void gradient_right(const X &x, const Y &y, Gradient &grad) {
+       if ((x.shape() != grad.shape()) || (y.shape() != grad.shape())) {
+          std::cerr << "ten::functional::binary_func<" << name()
+                    << "> gradient ";
+          std::cerr << "different shapes.\n";
+       } else {
+          if constexpr (Kind == ::ten::binary_operation::add) {
+             for (size_t i = 0; i < grad.size(); i++) {
+                grad[i] = 1;
+             }
+          }
+          if constexpr (Kind == ::ten::binary_operation::sub) {
+             for (size_t i = 0; i < grad.size(); i++) {
+                grad[i] = -1;
+             }
+          }
+          if (Kind == ::ten::binary_operation::mul) {
+             for (size_t i = 0; i < grad.size(); i++) {
+                grad[i] = x[i];
+             }
+          }
+          if (Kind == ::ten::binary_operation::div) {
+             for (size_t i = 0; i < grad.size(); i++) {
+                grad[i] = -x[i] / (y[i] * y[i]);
+             }
+          }
+       }
+    }
+    */
+  };
 };
 
 /// Binary function with scalar
 template <::ten::binary_operation Kind> struct scalar_left_binary_func {
 
-   template <Scalar X, class Y, class Z>
-   struct func : ::ten::functional::func<> {
-      static constexpr std::string name() {
-         if constexpr (Kind == ::ten::binary_operation::add) {
-            return std::string("add");
-         }
-         if constexpr (Kind == ::ten::binary_operation::sub) {
-            return std::string("sub");
-         }
-         if constexpr (Kind == ::ten::binary_operation::mul) {
-            return std::string("mul");
-         }
-         if constexpr (Kind == ::ten::binary_operation::div) {
-            return std::string("div");
-         }
+  template <Scalar X, class Y, class Z> struct func : ::ten::functional::func {
+    static constexpr std::string name() {
+      if constexpr (Kind == ::ten::binary_operation::add) {
+        return std::string("add");
       }
-
-      using output_type = Z;
-
-      void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
-                      std::shared_ptr<Z> &z) {
-         if constexpr (Z::is_dynamic()) {
-            if (!z) {
-               z = std::make_shared<Z>(y->shape());
-            }
-            Y xarr(y->shape());
-            for (size_t i = 0; i < y->size(); i++) {
-               xarr[i] = x->value();
-            }
-            ::ten::kernels::binary_ops<Kind>(xarr, *y.get(), *z.get());
-         } else {
-            if (!z) {
-               z = std::make_shared<Z>();
-            }
-            Y xarr;
-            for (size_t i = 0; i < Y::static_size(); i++) {
-               xarr[i] = x->value();
-            }
-            ::ten::kernels::binary_ops<Kind>(xarr, *y.get(), *z.get());
-         }
+      if constexpr (Kind == ::ten::binary_operation::sub) {
+        return std::string("sub");
       }
-   };
+      if constexpr (Kind == ::ten::binary_operation::mul) {
+        return std::string("mul");
+      }
+      if constexpr (Kind == ::ten::binary_operation::div) {
+        return std::string("div");
+      }
+    }
+
+    using output_type = Z;
+
+    void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
+              std::shared_ptr<Z> &z) {
+      if (!z) {
+        z = std::make_shared<Z>(y->shape(), y->format(), y->requires_grad(),
+                                y->storage_order());
+      }
+      Y xarr(y->shape(), ten::storage_format::dense, false, y->storage_order());
+      for (size_t i = 0; i < y->size(); i++) {
+        xarr[i] = x->value();
+      }
+      ::ten::kernels::binary_ops<Kind>(xarr, *y.get(), *z.get());
+    }
+  };
 };
 
 /// Binary function with scalar right type
 template <::ten::binary_operation Kind> struct scalar_right_binary_func {
 
-   template <class X, Scalar Y, class Z>
-   struct func : ::ten::functional::func<> {
-      static constexpr std::string name() {
-         if constexpr (Kind == ::ten::binary_operation::add) {
-            return std::string("add");
-         }
-         if constexpr (Kind == ::ten::binary_operation::sub) {
-            return std::string("sub");
-         }
-         if constexpr (Kind == ::ten::binary_operation::mul) {
-            return std::string("mul");
-         }
-         if constexpr (Kind == ::ten::binary_operation::div) {
-            return std::string("div");
-         }
+  template <class X, Scalar Y, class Z> struct func : ::ten::functional::func {
+    static constexpr std::string name() {
+      if constexpr (Kind == ::ten::binary_operation::add) {
+        return std::string("add");
       }
-
-      using output_type = Z;
-
-      void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
-                      std::shared_ptr<Z> &z) {
-         if constexpr (Z::is_dynamic()) {
-            if (!z) {
-               z = std::make_shared<Z>(x->shape());
-            }
-         } else {
-            if (!z) {
-               z = std::make_shared<Z>();
-            }
-         }
-         if constexpr (Z::is_static()) {
-            X yarr;
-            for (size_t i = 0; i < x->size(); i++) {
-               yarr[i] = y->value();
-            }
-            ::ten::kernels::binary_ops<Kind>(*x.get(), yarr, *z.get());
-         } else {
-            X yarr(x->shape());
-            for (size_t i = 0; i < x->size(); i++) {
-               yarr[i] = y->value();
-            }
-            ::ten::kernels::binary_ops<Kind>(*x.get(), yarr, *z.get());
-         }
+      if constexpr (Kind == ::ten::binary_operation::sub) {
+        return std::string("sub");
       }
-   };
+      if constexpr (Kind == ::ten::binary_operation::mul) {
+        return std::string("mul");
+      }
+      if constexpr (Kind == ::ten::binary_operation::div) {
+        return std::string("div");
+      }
+    }
+
+    using output_type = Z;
+
+    void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
+              std::shared_ptr<Z> &z) {
+      if (!z) {
+        z = std::make_shared<Z>(x->shape(), x->format(), x->requires_grad(),
+                                x->storage_order());
+      }
+      X yarr(x->shape(), ten::storage_format::dense, false, x->storage_order());
+      for (size_t i = 0; i < x->size(); i++) {
+        yarr[i] = y->value();
+      }
+      ::ten::kernels::binary_ops<Kind>(*x.get(), yarr, *z.get());
+    }
+  };
 };
 
-template <class A, class B, class C> struct mul : func<> {};
+/// Multiply
+template <class A, class B, class C> struct mul : func {};
 
-// vector * vector
-template <DynamicVector X, DynamicVector Y, DynamicVector Z>
-struct mul<X, Y, Z> : ::ten::functional::func<> {
-   static constexpr std::string name() { return std::string("mul"); }
+/// tensor * tensor
+///
+/// - Elementwise vector * vector
+/// - Matrix * vector
+/// - Matrix * matrix
+/// - Elementwise tensor * tensor
+template <Tensor X, Tensor Y, Tensor Z>
+struct mul<X, Y, Z> : ::ten::functional::func {
+  static constexpr std::string name() { return std::string("mul"); }
 
-   using output_type = Z;
+  using output_type = Z;
 
-   void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
-                   std::shared_ptr<Z> &z) {
-      if (x->shape() != y->shape()) {
-         std::cerr << "ten::functional::mul, different input shapes\n";
+  void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
+            std::shared_ptr<Z> &z) {
+    const std::size_t xrank = x->rank();
+    const std::size_t yrank = y->rank();
+    if (xrank == 1 && yrank == 1) {
+      // Elementwise vector - vector multiplication
+      if (x->size() != y->size()) {
+        std::cerr << "ten::functional::mul, different vector shapes\n";
+      } else if (!x->is_dense() && !y->is_dense()) {
+        std::cerr << "ten::functional::mul, storage format must be dense.\n";
+      } else if (x->storage_order() != y->storage_order()) {
+        std::cerr << "ten::functional::mul, different storage order.\n";
       } else {
-         if (!z) {
-            z = std::make_shared<Z>(x->shape());
-         }
-         ::ten::kernels::binary_ops<::ten::binary_operation::mul>(
-             *x.get(), *y.get(), *z.get());
+        if (!z) {
+          z = std::make_shared<Z>(x->shape(), ten::storage_format::dense,
+                                  x->requires_grad() || y->requires_grad(),
+                                  x->storage_order());
+        }
+        ::ten::kernels::binary_ops<::ten::binary_operation::mul>(
+            *x.get(), *y.get(), *z.get());
       }
-   }
+    } else if (xrank == 2 && yrank == 2) {
+      // Matrix - matrix multiplication
+      if (x->dim(1) != y->dim(0)) {
+        std::cerr
+            << "ten::functional::mul - incompatibles input matrices shapes.\n";
+      } else if (!x->is_dense() || !y->is_dense()) {
+        std::cerr << "ten::functional::mul, storage format must be dense.\n";
+      } else if (x->storage_order() != y->storage_order()) {
+        std::cerr << "ten::functional::mul, different storage order.\n";
+      } else {
+        if (!z) {
+          std::initializer_list<size_type> &&dims = {x->dim(0), y->dim(1)};
+          z = std::make_shared<Z>(std::move(dims), ten::storage_format::dense,
+                                  x->requires_grad() || y->requires_grad(),
+                                  x->storage_order());
+        }
+        kernels::mul(*x.get(), *y.get(), *z.get());
+      }
+    } else if (xrank == 2 && yrank == 1) {
+      // Matrix - vector multiplication
+      if (x->dim(1) != y->size()) {
+        std::cerr << "ten::functional::mul matrix vector incompatible input "
+                     "shapes\n";
+      } else if (!x->is_dense() || !y->is_dense()) {
+        std::cerr << "ten::functional::mul, storage format must be dense.\n";
+      } else if (x->storage_order() != y->storage_order()) {
+        std::cerr << "ten::functional::mul, different storage order.\n";
+      } else {
+        if (!z) {
+          std::initializer_list<size_type> &&dims = {y->size()};
+          z = std::make_shared<Z>(std::move(dims), ten::storage_format::dense,
+                                  x->requires_grad() || y->requires_grad(),
+                                  x->storage_order());
+        }
+        kernels::mul(*x.get(), *y.get(), *z.get());
+      }
+    } else if (xrank == yrank) {
+      if (!ten::details::same_shape(x->shape(), y->shape())) {
+        std::cerr << "ten::functional::mul elementwise tensor multiplication "
+                     "expects same tensor shape.\n";
+      } else if (!x->is_dense() || !y->is_dense()) {
+        std::cerr << "ten::functional::mul, storage format must be dense.\n";
 
+      } else if (x->storage_order() != y->storage_order()) {
+        std::cerr << "ten::functional::mul, different storage order.\n";
+      } else {
+        if (!z) {
+          z = std::make_shared<Z>(x->shape(), ten::storage_format::dense,
+                                  x->requires_grad() || x->requires_grad(),
+                                  x->storage_order());
+        }
+        kernels::binary_ops<ten::binary_operation::mul>(*x.get(), *y.get(),
+                                                        *z.get());
+      }
+    } else {
+      std::cerr << "ten::functional::mul, multiplication not supported.\n";
+    }
+  }
+
+  /*
    template <class Gradient>
       requires(::ten::is_tensor_v<Gradient>)
    void gradient_left(const X &x, const Y &y, Gradient &grad) {
@@ -1549,254 +1368,72 @@ struct mul<X, Y, Z> : ::ten::functional::func<> {
          }
       }
    }
-};
+  */
 
-// svector * svector
-template <StaticVector X, StaticVector Y, StaticVector Z>
-struct mul<X, Y, Z> : ::ten::functional::func<> {
-   static constexpr std::string name() { return std::string("mul"); }
+  /*
+ // Static shapes gradient
+ template <class Gradient>
+    requires(::ten::is_matrix_v<X> && ::ten::is_matrix_v<Y> &&
+             ::ten::is_matrix_v<Gradient>)
+ void gradient_left(const X &x, const Y &y, Gradient &grad) {
+    if (x.shape().dim(1) != y.shape().dim(0)) {
+       std::cerr << "ten::functional::mul gradient - incompatible shapes.\n";
+    } else if ((x.shape().dim(0) != grad.shape().dim(0)) ||
+               (x.shape().dim(1) != grad.shape().dim(1))) {
+       std::cerr
+           << "ten::functional::mul gradient - incompatible output shape.\n";
+    } else {
+       if constexpr (Gradient::shape_type::is_dynamic()) {
+          auto rows = grad.shape().dim(0);
+          auto cols = grad.shape().dim(1);
+          for (size_t i = 0; i < cols; i++) {
+             grad(0, i) = 0;
+             for (size_t j = 0; j < y.shape().dim(1); j++) {
+                grad(0, i) += y(i, j);
+             }
+          }
+          for (size_t j = 0; j < cols; j++) {
+             for (size_t i = 1; i < rows; i++) {
+                grad(i, j) = grad(0, j);
+             }
+          }
+       }
+    }
+ }
 
-   using output_type = Z;
+ template <class Gradient>
+    requires(::ten::is_matrix_v<X> && ::ten::is_matrix_v<Y> &&
+             ::ten::is_matrix_v<Gradient>)
+ void gradient_right(const X &x, const Y &y, Gradient &grad) {
+    if (x.shape().dim(1) != y.shape().dim(0)) {
+       std::cerr << "ten::functional::mul gradient incompatible shapes.\n";
+    } else if ((y.shape().dim(0) != grad.shape().dim(0)) ||
+               (y.shape().dim(1) != grad.shape().dim(1))) {
+       std::cerr
+           << "ten::functional::mul gradient incompatible output shape.\n";
+    } else {
+       if constexpr (Gradient::shape_type::is_dynamic()) {
+          auto rows = grad.shape().dim(0);
+          auto cols = grad.shape().dim(1);
+          size_t j = 0;
+          for (size_t i = 0; i < rows; i++) {
+             grad(i, 0) = 0;
+             for (size_t k = 0; k < x.shape().dim(0); k++) {
+                grad(i, 0) += x(k, j);
+             }
+             j++;
+          }
+          for (size_t j = 1; j < cols; j++) {
+             for (size_t i = 0; i < rows; i++) {
+                grad(i, j) = grad(i, 0);
+             }
+          }
+       }
+    }
+ }
+*/
 
-   void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
-                   std::shared_ptr<Z> &z) {
-      if (!std::is_same_v<typename X::shape_type, typename Y::shape_type>) {
-         std::cerr << "ten::functional::mul, different input shapes\n";
-      } else {
-         if (!z) {
-            z = std::make_shared<Z>();
-         }
-         ::ten::kernels::binary_ops<::ten::binary_operation::mul>(
-             *x.get(), *y.get(), *z.get());
-      }
-   }
-
-   template <class Gradient>
-      requires(::ten::is_stensor_v<Gradient>)
-   void gradient_left(const X &x, const Y &y, Gradient &grad) {
-      if constexpr (!std::is_same_v<typename X::shape_type,
-                                    typename Gradient::shape_type> ||
-                    !std::is_same_v<typename X::shape_type,
-                                    typename Gradient::shape_type>) {
-         std::cerr << "ten::functional::mul gradient - different shapes.\n";
-      } else {
-         for (size_t i = 0; i < Gradient::static_size(); i++) {
-            grad[i] = y[i];
-         }
-      }
-   }
-
-   template <class Gradient>
-      requires(::ten::is_stensor_v<Gradient>)
-   void gradient_right(const X &x, const Y &y, Gradient &grad) {
-      if constexpr (!std::is_same_v<typename X::shape_type,
-                                    typename Gradient::shape_type> ||
-                    !std::is_same_v<typename X::shape_type,
-                                    typename Gradient::shape_type>) {
-         std::cerr << "ten::functional::mul gradient - different shapes.\n";
-      } else {
-         for (size_t i = 0; i < Gradient::static_size(); i++) {
-            grad[i] = x[i];
-         }
-      }
-   }
-};
-
-// matrix * matrix
-template <Matrix X, Matrix Y, Matrix Z> struct mul<X, Y, Z> : func<> {
-
-   static constexpr std::string name() { return std::string("mul"); }
-
-   using output_type = Z;
-
-   void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
-                   std::shared_ptr<Z> &z) {
-      if (x->shape().dim(1) != y->shape().dim(0)) {
-         std::cerr
-             << "ten::functional::mul - incompatibles input matrices shapes.\n";
-      } else {
-         if (!z) {
-            std::initializer_list<size_type> &&dims = {x->shape().dim(0),
-                                                       y->shape().dim(1)};
-            typename Z::shape_type zshape(std::move(dims));
-            z = std::make_shared<Z>(zshape);
-         }
-         kernels::mul(*x.get(), *y.get(), *z.get());
-      }
-   }
-
-   // Static shapes gradient
-   template <class Gradient>
-      requires(::ten::is_matrix_v<X> && ::ten::is_matrix_v<Y> &&
-               ::ten::is_matrix_v<Gradient>)
-   void gradient_left(const X &x, const Y &y, Gradient &grad) {
-      if (x.shape().dim(1) != y.shape().dim(0)) {
-         std::cerr << "ten::functional::mul gradient - incompatible shapes.\n";
-      } else if ((x.shape().dim(0) != grad.shape().dim(0)) ||
-                 (x.shape().dim(1) != grad.shape().dim(1))) {
-         std::cerr
-             << "ten::functional::mul gradient - incompatible output shape.\n";
-      } else {
-         if constexpr (Gradient::shape_type::is_dynamic()) {
-            auto rows = grad.shape().dim(0);
-            auto cols = grad.shape().dim(1);
-            for (size_t i = 0; i < cols; i++) {
-               grad(0, i) = 0;
-               for (size_t j = 0; j < y.shape().dim(1); j++) {
-                  grad(0, i) += y(i, j);
-               }
-            }
-            for (size_t j = 0; j < cols; j++) {
-               for (size_t i = 1; i < rows; i++) {
-                  grad(i, j) = grad(0, j);
-               }
-            }
-         }
-      }
-   }
-
-   template <class Gradient>
-      requires(::ten::is_matrix_v<X> && ::ten::is_matrix_v<Y> &&
-               ::ten::is_matrix_v<Gradient>)
-   void gradient_right(const X &x, const Y &y, Gradient &grad) {
-      if (x.shape().dim(1) != y.shape().dim(0)) {
-         std::cerr << "ten::functional::mul gradient incompatible shapes.\n";
-      } else if ((y.shape().dim(0) != grad.shape().dim(0)) ||
-                 (y.shape().dim(1) != grad.shape().dim(1))) {
-         std::cerr
-             << "ten::functional::mul gradient incompatible output shape.\n";
-      } else {
-         if constexpr (Gradient::shape_type::is_dynamic()) {
-            auto rows = grad.shape().dim(0);
-            auto cols = grad.shape().dim(1);
-            size_t j = 0;
-            for (size_t i = 0; i < rows; i++) {
-               grad(i, 0) = 0;
-               for (size_t k = 0; k < x.shape().dim(0); k++) {
-                  grad(i, 0) += x(k, j);
-               }
-               j++;
-            }
-            for (size_t j = 1; j < cols; j++) {
-               for (size_t i = 0; i < rows; i++) {
-                  grad(i, j) = grad(i, 0);
-               }
-            }
-         }
-      }
-   }
-};
-
-// smatrix * smatrix
-template <StaticMatrix X, StaticMatrix Y, StaticMatrix Z>
-struct mul<X, Y, Z> : func<> {
-
-   static constexpr std::string name() { return std::string("mul"); }
-
-   using output_type = Z;
-
-   void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
-                   std::shared_ptr<Z> &z) {
-      if constexpr (X::shape_type::template static_dim<1>() !=
-                    Y::shape_type::template static_dim<0>()) {
-         std::cerr
-             << "ten::functional::mul - incompatibles input matrices shapes.\n";
-      } else {
-         if (!z) {
-            z = std::make_shared<Z>();
-         }
-         kernels::mul(*x.get(), *y.get(), *z.get());
-      }
-   }
-
-   // Compute dz(x,y)/dx in grad
-   template <class Gradient>
-      requires(::ten::is_smatrix_v<Gradient>)
-   void gradient_left(const X & x, const Y &y, Gradient &grad) {
-      if constexpr (X::shape_type::template static_dim<1>() !=
-                    Y::shape_type::template static_dim<0>()) {
-         std::cerr << "ten::functional::mul gradient - incompatible shapes.\n";
-      } else if constexpr ((X::shape_type::template static_dim<0>() !=
-                            Gradient::shape_type::template static_dim<0>()) ||
-                           (X::shape_type::template static_dim<1>() !=
-                            Gradient::shape_type::template static_dim<1>())) {
-         std::cerr
-             << "ten::functional::mul gradient - incompatible output shape.\n";
-      } else {
-         constexpr size_t rows = Gradient::shape_type::template static_dim<0>();
-         constexpr size_t cols = Gradient::shape_type::template static_dim<1>();
-         for (size_t i = 0; i < cols; i++) {
-            grad(0, i) = 0;
-            for (size_t j = 0; j < Y::shape_type::template static_dim<1>();
-                 j++) {
-               grad(0, i) += y(i, j);
-            }
-         }
-         for (size_t j = 0; j < cols; j++) {
-            for (size_t i = 1; i < rows; i++) {
-               grad(i, j) = grad(0, j);
-            }
-         }
-      }
-   }
-
-   // Compute dz(x, y)/dy in grad
-   template <class Gradient>
-      requires(::ten::is_matrix_v<X> && ::ten::is_matrix_v<Y> &&
-               ::ten::is_matrix_v<Gradient>)
-   void gradient_right(const X &x, const Y & y, Gradient &grad) {
-      if constexpr (X::shape_type::template static_dim<1>() !=
-                    Y::shape_type::template static_dim<0>()) {
-         std::cerr << "ten::functional::mul gradient - incompatible shapes.\n";
-      } else if constexpr ((Y::shape_type::template static_dim<0>() !=
-                            Gradient::shape_type::template static_dim<0>()) ||
-                           (Y::shape_type::template static_dim<1>() !=
-                            Gradient::shape_type::template static_dim<1>())) {
-         std::cerr
-             << "ten::functional::mul gradient - incompatible output shape.\n";
-      } else {
-         constexpr size_t rows = Gradient::shape_type::template static_dim<0>();
-         constexpr size_t cols = Gradient::shape_type::template static_dim<1>();
-         size_t j = 0;
-         for (size_t i = 0; i < rows; i++) {
-            grad(i, 0) = 0;
-            for (size_t k = 0; k < X::shape_type::template static_dim<0>();
-                 k++) {
-               grad(i, 0) += x(k, j);
-            }
-            j++;
-         }
-         for (size_t j = 1; j < cols; j++) {
-            for (size_t i = 0; i < rows; i++) {
-               grad(i, j) = grad(i, 0);
-            }
-         }
-      }
-   }
-};
-
-// matrix * vector
-template <Matrix X, Vector Y, Vector Z>
-struct mul<X, Y, Z> : ::ten::functional::func<> {
-   static constexpr std::string name() { return std::string("mul"); }
-
-   using output_type = Z;
-
-   void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
-                   std::shared_ptr<Z> &z) {
-      if (x->shape().dim(1) != y->shape().dim(0)) {
-         std::cerr << "ten::functional::mul matrix vector incompatible input "
-                      "shapes\n";
-      } else {
-         if (!z) {
-            std::initializer_list<size_type> &&dims = {x->shape().dim(0)};
-            typename Z::shape_type zshape(std::move(dims));
-            z = std::make_shared<Z>(zshape);
-         }
-         kernels::mul(*x.get(), *y.get(), *z.get());
-      }
-   }
-
+  /*
    template <class Gradient>
       requires(::ten::is_matrix_v<Gradient>)
    void gradient_left(const X & x, const Y &y, Gradient &grad) {
@@ -1827,46 +1464,66 @@ struct mul<X, Y, Z> : ::ten::functional::func<> {
             j++;
          }
       }
-   }
+   }*/
 };
-*/
 
-/*
-template<Scalar X, Tensor Y, Tensor Z>
+// Multiply by a scalar
+/*template<Scalar X, Tensor Y, Tensor Z>
 struct mul<X, Y, Z>  = scalar_left_binary_func<X, Y, Z>::func;
+
+template<Tensor X, Scalar Y, Tensor Z>
+struct mul<X, Y, Z>  = scalar_right_binary_func<X, Y, Z>::func;
 */
 
 // scalar * tensor
-/*
-template <Scalar X, Tensor Y, Tensor Z> struct mul<X, Y, Z> : func<> {
+template <Scalar X, Tensor Y, Tensor Z> struct mul<X, Y, Z> : func {
 
-   static constexpr std::string name() { return std::string("mul"); }
+  static constexpr std::string name() { return std::string("mul"); }
 
-   using output_type = Z;
+  using output_type = Z;
 
-   void operator()(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
-                   std::shared_ptr<Z> &z) {
-      if constexpr (Z::is_dynamic()) {
-         if (!z) {
-            z = std::make_shared<Z>(y->shape());
-         }
-         Y xarr(y->shape());
-         for (size_t i = 0; i < xarr.size(); i++) {
-            xarr[i] = x->value();
-         }
-         ten::kernels::mul(xarr, *y.get(), *z.get());
-      } else {
-         if (!z) {
-            z = std::make_shared<Z>();
-         }
-         Y xarr;
-         for (size_t i = 0; i < Y::static_size(); i++) {
-            xarr[i] = x->value();
-         }
-         ten::kernels::mul(xarr, *y.get(), *z.get());
+  void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
+            std::shared_ptr<Z> &z) {
+    if (!y->is_dense()) {
+      std::cerr << "mul, storage format must be dense.\n";
+    } else {
+      if (!z) {
+        z = std::make_shared<Z>(y->shape(), ten::storage_format::dense,
+                                y->requires_grad(), y->storage_order());
       }
-   }
-};*/
+      Y xarr(y->shape(), ten::storage_format::dense, false, y->storage_order());
+      for (size_t i = 0; i < xarr.size(); i++) {
+        xarr[i] = x->value();
+      }
+      ten::kernels::mul(xarr, *y.get(), *z.get());
+    }
+  }
+};
+
+// tensor * scalar
+template <Tensor X, Scalar Y, Tensor Z> struct mul<X, Y, Z> : func {
+
+  static constexpr std::string name() { return std::string("mul"); }
+
+  using output_type = Z;
+
+  void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y,
+            std::shared_ptr<Z> &z) {
+    if (!x->is_dense()) {
+      std::cerr << "mul, storage format must be dense.\n";
+    } else {
+      if (!z) {
+        z = std::make_shared<Z>(x->shape(), ten::storage_format::dense,
+                                x->requires_grad(), x->storage_order());
+      }
+      X yarr(x->shape(), ten::storage_format::dense, false, x->storage_order());
+      for (size_t i = 0; i < yarr.size(); i++) {
+        yarr[i] = y->value();
+      }
+      ten::kernels::mul(yarr, *y.get(), *z.get());
+    }
+  }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Reshape
