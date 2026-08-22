@@ -107,11 +107,11 @@ template <typename T> auto py_sin(ten::tensor<T> &x) {
 }
 
 template <typename T> auto py_sinh(ten::tensor<T> &x) {
-  return ten::sqrt(x).eval();
+  return ten::sinh(x).eval();
 }
 
 template <typename T> auto py_asin(ten::tensor<T> &x) {
-  return ten::sqrt(x).eval();
+  return ten::asin(x).eval();
 }
 
 template <typename T> auto py_cos(ten::tensor<T> &x) {
