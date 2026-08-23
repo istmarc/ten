@@ -1,0 +1,6 @@
+#ifndef TEN_ML
+#define TEN_ML
+
+#include <ten/learning/histogram.hxx>
+
+#endif
