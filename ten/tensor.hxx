@@ -24,7 +24,7 @@
 #include <ten/utils.hxx>
 
 #include <ten/storage/dense_storage.hxx>
-// #include <ten/storage/sparse_storage.hxx>
+#include <ten/storage/sparse_storage.hxx>
 
 // For expression matching
 // #include <ten/matching.hxx>
@@ -1806,148 +1806,265 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// TODO Sparse tensors
-/*
-template <class T> class sparse_tensor final : expr, tensor_base {
+// Sparse tensor node
+
+/// \class sparse_tensor_node
+/// Sparse tensor node
+template <typename T> class sparse_tensor_node {
 public:
-  using value_type = T;
-  using node_type = ::ten::tensor_node<T, Storage, Allocator>;
-  using storage_type = Storage;
-  using base_type = tensor_operations<T, Shape, order, Storage, Allocator>;
-  /// stride type
-  using stride_type = typename base_type::stride_type;
+  using storage_type = sparse_storage<T>;
 
 private:
-  /// Storage format (must be coo, csc or csr)
-  ::ten::storage_format _format = ::ten::storage_format::coo;
-  /// Optional shape (only for dynamic tensors)
-  std::optional<Shape> _shape = std::nullopt;
-  /// Optional stride (only for dynamic tensors)
-  std::optional<stride_type> _stride = std::nullopt;
-  /// Shared pointer to the node
-  std::shared_ptr<node_type> _node = nullptr;
-
-private:
-  /// Returns the value at the indices
-  [[nodiscard]] inline typename base_type::value_type &
-  at(size_type index, auto... tail) noexcept {
-    static constexpr size_type rank = Shape::rank();
-    constexpr size_type tail_size = sizeof...(tail);
-    static_assert(tail_size == 0 || tail_size == (rank - 1),
-                  "Invalid number of indices.");
-    if constexpr (tail_size == 0) {
-      return (*_node.get())[index];
-    }
-    std::array<size_type, Shape::rank()> indices{
-        index, static_cast<size_type>(tail)...};
-    if constexpr (Shape::is_dynamic()) {
-      size_type idx = details::linear_index(_stride.value(), indices);
-      return (*_node.get())[idx];
-    } else {
-      size_type idx = details::static_linear_index<stride_type>(indices);
-      return (*_node.get())[idx];
-    }
-  }
-
-  /// Returns the value at the indices
-  [[nodiscard]] inline const typename base_type::value_type &
-  at(size_type index, auto... tail) const noexcept {
-    static constexpr size_type rank = Shape::rank();
-    constexpr size_type tail_size = sizeof...(tail);
-    static_assert(tail_size == 0 || tail_size == (rank - 1),
-                  "Invalid number of indices.");
-    if constexpr (tail_size == 0) {
-      return (*_node.get())[index];
-    }
-    std::array<size_type, Shape::rank()> indices{
-        index, static_cast<size_type>(tail)...};
-    if constexpr (Shape::is_dynamic()) {
-      size_type idx = details::linear_index(_stride.value(), indices);
-      return (*_node.get())[idx];
-    } else {
-      size_type idx = details::static_linear_index<stride_type>(indices);
-      return (*_node.get())[idx];
-    }
-  }
+  /// storage
+  std::unique_ptr<storage_type> _storage = nullptr;
 
 public:
-  /// Constructor for static sparse tensor
-  ranked_sparse_tensor(ten::storage_format format = storage_format::coo)
-    requires(Shape::is_static())
-      : _format(format), _stride(typename base_type::stride_type()) {
-    auto storage = std::make_unique<storage_type>();
-    _node = std::make_shared<node_type>(storage);
-  }
+  /// Construct a sparse_sparse_tensor_node from storage
+  explicit sparse_tensor_node(std::unique_ptr<storage_type> &&st) noexcept
+      : _storage(std::move(st)) {}
 
-  // Constructor for sparse tensor
-  explicit ranked_sparse_tensor(
-      std::initializer_list<size_t> &&dims,
-      ten::storage_format format = storage_format::coo) noexcept
-    requires(Shape::is_dynamic())
-      : _format(format), _shape(std::move(dims)),
-        _stride(typename base_type::stride_type(_shape.value())) {
-    auto storage = std::make_unique<storage_type>(_shape.value());
-    _node = std::make_shared<node_type>(std::move(storage));
-  }
+  /// Move constructor
+  sparse_tensor_node(sparse_tensor_node &&) = default;
 
   /// Copy constructor
-  ranked_sparse_tensor(const ranked_sparse_tensor &t) {
+  sparse_tensor_node(const sparse_tensor_node &) = default;
+
+  /// Assignment operator
+  sparse_tensor_node &operator=(sparse_tensor_node &&) = default;
+
+  // Assignement operator
+  sparse_tensor_node &operator=(const sparse_tensor_node &node) {
+    this->_storage = node._storage;
+    return *this;
+  }
+
+  /// Get the size
+  [[nodiscard]] std::size_t size() const { return _storage.get()->size(); }
+
+  /// Get the storage
+  [[nodiscard]] storage_type &storage() const { return *_storage.get(); }
+
+  /// Overloading the [] operator
+  [[nodiscard]] inline const T &operator[](std::size_t index) const noexcept {
+    return (*_storage.get())[index];
+  }
+
+  /// Overloading the [] operator
+  [[nodiscard]] inline T &operator[](std::size_t index) noexcept {
+    return (*_storage.get())[index];
+  }
+
+  /// Set the value at index
+  void set(std::size_t index, T value) { _storage->set(index, value); }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Sparse tensors
+
+/// \class sparse_tensor
+/// Sparse tensor
+template <class T> class sparse_tensor final : public expr, public tensor_base {
+public:
+  using value_type = T;
+  using node_type = sparse_tensor_node<T>;
+  using storage_type = sparse_storage<T>;
+
+private:
+  /// Requires gradient
+  bool _requires_grad = false;
+  /// Storage format (must be coo, csc or csr)
+  storage_format _format = storage_format::coo;
+  /// Storage order
+  storage_order _order = storage_order::col_major;
+  /// Size
+  std::size_t _size = 0;
+  /// Shape
+  std::vector<std::size_t> _shape = {};
+  /// Strides
+  std::vector<std::size_t> _stride = {};
+  /// Shared pointer to the node
+  std::shared_ptr<node_type> _node = nullptr;
+  /// Gradient information
+  std::shared_ptr<node_type> _grad = nullptr;
+
+private:
+  /// Returns the value at the indices
+  [[nodiscard]] inline T &at(size_type index, auto... tail) noexcept {
+    constexpr std::size_t tail_size = sizeof...(tail);
+    if constexpr (tail_size == 0) {
+      return (*_node.get())[index];
+    }
+    std::vector<std::size_t> indices = {index,
+                                        static_cast<std::size_t>(tail)...};
+    std::size_t idx = details::linear_index(_stride, indices);
+    return (*_node.get())[idx];
+  }
+
+  /// Returns the value at the indices
+  [[nodiscard]] inline const T &at(size_type index,
+                                   auto... tail) const noexcept {
+    constexpr std::size_t tail_size = sizeof...(tail);
+    if constexpr (tail_size == 0) {
+      return (*_node.get())[index];
+    }
+    std::vector<std::size_t> indices = {index, static_cast<size_type>(tail)...};
+    std::size_t idx = details::linear_index(_stride, indices);
+    return (*_node.get())[idx];
+  }
+
+public:
+  // Constructor for sparse tensor
+  explicit sparse_tensor(
+      const std::vector<std::size_t> &dims,
+      const storage_format format = storage_format::coo,
+      const bool requires_grad = false,
+      const storage_order order = storage_order::col_major) noexcept
+      : _requires_grad(requires_grad), _format(format), _order(order),
+        _shape(dims), _stride(details::compute_strides(dims, order)) {
+    _size = details::compute_size(_shape);
+    // node
+    auto storage = std::make_unique<storage_type>(_size);
+    _node = std::make_shared<node_type>(std::move(storage));
+    // gradient
+    if (requires_grad) {
+      auto st = std::make_unique<storage_type>(_size);
+      _grad = std::make_shared<node_type>(std::move(st));
+    }
+  }
+  explicit sparse_tensor(
+      std::initializer_list<size_t> &&dims,
+      const storage_format format = storage_format::coo,
+      const bool requires_grad = false,
+      const storage_order order = storage_order::col_major) noexcept
+      : _requires_grad(requires_grad), _format(format), _order(order),
+        _shape(std::move(dims)),
+        _stride(details::compute_strides(_shape, order)) {
+    _size = details::compute_size(_shape);
+    // node
+    auto storage = std::make_unique<storage_type>(_size);
+    _node = std::make_shared<node_type>(std::move(storage));
+    // gradient
+    if (requires_grad) {
+      auto st = std::make_unique<storage_type>(_size);
+      _grad = std::make_shared<node_type>(std::move(st));
+    }
+  }
+
+  /// Set the value
+  void set(const std::vector<std::size_t> &index, T value) {
+    std::size_t idx = details::linear_index(_stride, index);
+    _node->set(idx, value);
+  }
+  /*
+  void set(std::initializer_list<std::size_t>&& index, T value) {
+    const std::vector<std::size_t> idx(std::move(index));
+    set(idx, value);
+  }*/
+
+  /// COO ({{{0, 0}, 1.}, {{1,1}, 2.}})
+  static sparse_tensor
+  coo(const std::vector<std::size_t> &dims,
+      const std::vector<std::tuple<std::vector<std::size_t>, T>> &values,
+      const bool requires_grad = false,
+      const storage_order order = storage_order::col_major) noexcept {
+    const std::size_t r = std::get<0>(values[0]).size();
+    for (std::size_t i = 1; i < values.size(); i++) {
+      if (std::get<0>(values[i]).size() != r) {
+        std::cerr << "COO Sparse tensor, error different indices rank.\n";
+      }
+    }
+    sparse_tensor x(dims, storage_format::coo, requires_grad, order);
+    for (std::size_t i = 0; i < values.size(); i++) {
+      x.set(std::get<0>(values[i]), std::get<1>(values[i]));
+    }
+    return x;
+  }
+
+  // TODO DOK
+  // TODO csc
+  // TODO csr
+
+  /// Copy constructor
+  sparse_tensor(const sparse_tensor &t) {
+    _requires_grad = t._requires_grad;
     _format = t._format;
+    _order = t._order;
+    _size = t._size;
     _shape = t._shape;
     _stride = t._stride;
     _node = t._node;
+    _grad = t._grad;
   }
 
   /// Move constructor
-  ranked_sparse_tensor(ranked_sparse_tensor &&t) {
+  sparse_tensor(sparse_tensor &&t) {
+    _requires_grad = std::move(t._requires_grad);
     _format = std::move(t._format);
+    _order = std::move(t._order);
+    _size = std::move(t._size);
     _shape = std::move(t._shape);
     _stride = std::move(t._stride);
     _node = std::move(t._node);
+    _grad = std::move(t._grad);
   }
 
   /// Assignment operator
-  ranked_sparse_tensor &operator=(const ranked_sparse_tensor &t) {
+  sparse_tensor &operator=(const sparse_tensor &t) {
+    _requires_grad = t._requires_grad;
     _format = t._format;
+    _order = t._order;
+    _size = t._size;
     _shape = t._shape;
     _stride = t._stride;
     _node = t._node;
+    _grad = t._grad;
     return *this;
   }
 
   /// Assignment operator
-  ranked_sparse_tensor &operator=(ranked_sparse_tensor &&t) {
+  sparse_tensor &operator=(sparse_tensor &&t) {
+    _requires_grad = std::move(t._requires_grad);
     _format = std::move(t._format);
+    _order = std::move(t._order);
+    _size = std::move(t._size);
     _shape = std::move(t._shape);
     _stride = std::move(t._stride);
     _node = std::move(t._node);
+    _grad = std::move(t._grad);
     return *this;
   }
 
+  /// Get the rank
+  [[nodiscard]] inline std::size_t rank() const { return _shape.size(); }
+
   /// Get the dimension at index
-  /// FIXME Requires only for dynamic dim
-  [[nodiscard]] size_type dim(size_type index) const {
-    return _shape.value().dim(index);
+  [[nodiscard]] inline std::size_t dim(std::size_t index) const {
+    return _shape[index];
   }
 
   /// Returns the shape
-  [[nodiscard]] inline const Shape &shape() const
-    requires(Shape::is_dynamic())
-  {
-    return _shape.value();
+  [[nodiscard]] inline const std::vector<std::size_t> &shape() const {
+    return _shape;
   }
 
   /// Returns the strides
-  [[nodiscard]] inline const typename base_type::stride_type &strides() const {
-    return _stride.value();
+  [[nodiscard]] inline const std::vector<std::size_t> &strides() const {
+    return _stride;
   }
 
-  /// Returns the dynamic size
-  /// TODO For static size
-  [[nodiscard]] inline size_type size() const { return _node.get()->size(); }
+  /// Returns the size
+  [[nodiscard]] inline std::size_t size() const { return _size; }
 
   /// Get the storage format
-  [[nodiscard]] storage_format format() const { return _format; }
+  [[nodiscard]] inline storage_format format() const { return _format; }
+
+  /// Get the storage order
+  [[nodiscard]] inline ten::storage_order storage_order() const {
+    return _order;
+  }
+
+  /// Is sparse
+  [[nodiscard]] constexpr bool is_sparse() const { return true; }
 
   /// Return whether the tensor is sparse coo
   [[nodiscard]] bool is_sparse_coo() const {
@@ -1968,34 +2085,28 @@ public:
   [[nodiscard]] std::shared_ptr<node_type> node() const { return _node; }
 
   /// Returns the storage
-  [[nodiscard]] Storage &storage() const { return _node.get()->storage(); }
+  [[nodiscard]] storage_type &storage() const { return _node.get()->storage(); }
 
   /// Overloading the [] operator
-  [[nodiscard]] inline const typename base_type::value_type &
-  operator[](size_type index) const noexcept {
+  [[nodiscard]] inline const T &operator[](size_type index) const noexcept {
     return (*_node.get())[index];
   }
 
-  /// Overloading the [] operator
-  [[nodiscard]] inline typename base_type::value_type &
-  operator[](size_type index) noexcept {
+  /// TODO Overloading the [] operator
+  /*[[nodiscard]] inline T& operator[](size_type index) noexcept {
     return (*_node.get())[index];
-  }
+  }*/
 
   /// Overloading the () operator
-  [[nodiscard]] inline const typename base_type::value_type &
-  operator()(auto... index) const noexcept {
-    static_assert(sizeof...(index) == Shape::rank());
+  [[nodiscard]] inline const T &operator()(auto... index) const noexcept {
     return at(index...);
   }
 
-  /// Overloading the () operator
-  [[nodiscard]] inline typename base_type::value_type &
-  operator()(auto... index) noexcept {
-    static_assert(sizeof...(index) == Shape::rank());
+  /// TODO Overloading the () operator
+  /*[[nodiscard]] inline T& operator()(auto... index) noexcept {
     return at(index...);
-  }
-};*/
+  }*/
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // tensor view
