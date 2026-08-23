@@ -1,0 +1,6 @@
+#ifndef TEN_SORT
+#define TEN_SORT
+
+#include <ten/sort.hxx>
+
+#endif
