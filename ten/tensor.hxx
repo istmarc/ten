@@ -3470,6 +3470,18 @@ template <Expr ExprType> auto sum(ExprType &&expr) {
   return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
+/// \fn sum
+/// Return the sum of a tensor or an expression along an axis
+template <Expr ExprType> auto sum(ExprType &&expr, std::size_t axis) {
+  using expr_type = std::remove_cvref_t<ExprType>;
+  using value_type = typename expr_type::value_type;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
+  using output_type = typename ::ten::details::output_type<expr_type>::type;
+  using func_type = ten::functional::sum_axis<input_type, output_type>;
+  func_type *f = new func_type(axis);
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
+}
+
 /// \fn cum_sum
 /// Return the cumulative sum of a tensor or an expression
 template <Expr ExprType> auto cum_sum(ExprType &&expr) {

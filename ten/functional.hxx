@@ -478,6 +478,41 @@ void sum_axis(ten::tensor<T> &x, ten::tensor<T> &s, std::size_t axis) {
 }
 } // namespace details
 
+/// Sum along an axis
+template <class X, class Y>
+  requires(
+      (::ten::is_tensor_v<X> || ::ten::is_column_v<X> || ::ten::is_row_v<X>) &&
+      ::ten::is_tensor_v<Y>)
+struct sum_axis : func {
+private:
+  std::size_t _axis;
+
+public:
+  using value_type = typename X::value_type;
+  using output_type = Y;
+  static constexpr std::string name() { return std::string("mean"); }
+
+  sum_axis(std::size_t axis) : _axis(axis) {}
+
+  void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
+    std::size_t size = 1;
+    for (std::size_t i = 0; i < x->rank(); i++) {
+      if (i != _axis) {
+        size *= x->dim(i);
+      }
+    }
+    if (!y) {
+      const std::vector<std::size_t> shape = {size};
+      y = std::make_shared<Y>(shape, ten::storage_format::dense,
+                              x->requires_grad(), x->storage_order());
+    }
+    for (std::size_t i = 0; i < size; i++) {
+      (*y.get())[i] = 0;
+    }
+    details::sum_axis(*x.get(), *y.get(), _axis);
+  }
+};
+
 /// Mean along an axis
 template <class X, class Y>
   requires(
