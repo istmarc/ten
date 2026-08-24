@@ -1,0 +1,6 @@
+#ifndef TEN_MCMC
+#define TEN_MCMC
+
+#include <ten/mcmcs/mcmc.hxx>
+
+#endif
