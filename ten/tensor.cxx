@@ -6,6 +6,7 @@
 
 #include <ten/io>
 #include <ten/linalg>
+#include <ten/ml>
 #include <ten/random>
 #include <ten/tensor>
 
@@ -296,12 +297,15 @@ template <typename T> auto py_svd(const ten::tensor<T> &a) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// learning
-// using histogram_float = ten::ml::histogram<float>;
-// using histogram_double = ten::ml::histogram<double>;
-// using histogram_options = ten::ml::histogram_options;
+// Machine learning
 
+using histogram_options = ten::ml::histogram_options;
+using histogram_float = ten::ml::histogram<float>;
+using histogram_double = ten::ml::histogram<double>;
+
+////////////////////////////////////////////////////////////////////////////////
 // Create a new tensor
+
 template <typename T>
 ten::tensor<T>
 py_make_tensor(const std::vector<std::size_t> &dims,
@@ -332,7 +336,9 @@ ten::diagonal<T> py_make_diagonal(
   return ten::diagonal<T>(dims, requires_grad, order);
 }
 
-// Random
+////////////////////////////////////////////////////////////////////////////////
+// Random functions
+
 template <typename T>
 auto py_rand_norm(
     const std::vector<std::size_t> &dims, T mean, T std,
@@ -791,16 +797,17 @@ PYBIND11_MODULE(tencore, m) {
 
   /////////////////////////////////////////////////////////////////////////////
   // learning
-  /*
+
   py::class_<histogram_options>(m, "histogram_options")
-      .def(py::init<bool, bool, size_t>());
+      .def(py::init<bool, bool, bool, std::size_t>());
+
   py::class_<histogram_float>(m, "histogram_float")
       .def(py::init<histogram_options>())
       .def("fit", &histogram_float::fit)
       .def("hist", &histogram_float::hist);
+
   py::class_<histogram_double>(m, "histogram_double")
       .def(py::init<histogram_options>())
       .def("fit", &histogram_double::fit)
       .def("hist", &histogram_double::hist);
-  */
 }
