@@ -2395,7 +2395,7 @@ template <typename T>
   auto node = t.node();
   auto shape = t.shape();
   auto order = t.storage_order();
-  return T(node, shape, format, false, order);
+  return ten::tensor<T>(node, shape, format, false, order);
 }
 
 /// Symmetric tensor
@@ -2405,7 +2405,7 @@ template <typename T> ten::tensor<T> symmetric(const ten::tensor<T> &t) {
   auto node = t.node();
   auto shape = t.shape();
   auto order = t.storage_order();
-  return T(node, shape, format, false, order);
+  return ten::tensor<T>(node, shape, format, false, order);
 }
 
 // TODO Extend hermitian to tensor
@@ -2417,7 +2417,7 @@ template <typename T> ten::tensor<T> hermitian(const ten::tensor<T> &t) {
   auto node = t.node();
   auto shape = t.shape();
   auto order = t.storage_order();
-  return T(node, shape, format, false, order);
+  return ten::tensor<T>(node, shape, format, false, order);
 }
 
 /// Conjugated tensor
@@ -2427,7 +2427,7 @@ template <typename T> ten::tensor<T> conj(const ten::tensor<T> &t) {
   auto node = t.node();
   auto shape = t.shape();
   auto order = t.storage_order();
-  return T(node, shape, format, false, order);
+  return ten::tensor<T>(node, shape, format, false, order);
 }
 
 /// Lower triangular matrix
@@ -2437,7 +2437,7 @@ template <typename T> ten::tensor<T> lower_tr(const ten::tensor<T> &t) {
   auto node = t.node();
   auto shape = t.shape();
   auto order = t.storage_order();
-  return T(node, shape, format, false, order);
+  return ten::tensor<T>(node, shape, format, false, order);
 }
 
 /// Upper triangular matrix
@@ -2447,7 +2447,7 @@ template <typename T> ten::tensor<T> upper_tr(const ten::tensor<T> &t) {
   auto node = t.node();
   auto shape = t.shape();
   auto order = t.storage_order();
-  return T(node, shape, format, false, order);
+  return ten::tensor<T>(node, shape, format, false, order);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

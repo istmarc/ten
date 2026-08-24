@@ -38,19 +38,25 @@ template <class T> struct output_type<tensor<T>> {
 
 // Input type of a unary expr
 template <class Input, class Output, class Func>
-  requires(::ten::is_tensor_v<Input> || ::ten::is_scalar_v<Input>)
-struct input_type<::ten::unary_expr<Input, Output, Func>> {
+  requires(ten::is_tensor_v<Input> || ten::is_scalar_v<Input>)
+struct input_type<ten::unary_expr<Input, Output, Func>> {
   using type = Input;
 };
 template <class Input, class Output, class Func>
-  requires(::ten::is_unary_expr_v<Input> || ::ten::is_binary_expr_v<Input>)
-struct input_type<::ten::unary_expr<Input, Output, Func>> {
+  requires(ten::is_unary_expr_v<Input> || ten::is_binary_expr_v<Input>)
+struct input_type<ten::unary_expr<Input, Output, Func>> {
   using type = typename Input::output_type;
 };
 
 // Output type of a unary expr
 template <class Input, class Output, class Func>
 struct output_type<::ten::unary_expr<Input, Output, Func>> {
+  using type = Output;
+};
+
+// Output type of a binary expr
+template <class X, class Y, class Output, class Func>
+struct output_type<ten::binary_expr<X, Y, Output, Func>> {
   using type = Output;
 };
 
