@@ -450,6 +450,73 @@ struct mean : func {
   }*/
 };
 
+namespace details {
+template <typename T>
+void sum_axis(ten::tensor<T> &x, ten::tensor<T> &s, std::size_t axis) {
+  const std::size_t size = s.size();
+  const std::size_t rank = x.rank();
+  if (rank == 2) {
+    if (axis == 0) {
+      for (std::size_t k = 0; k < size; k++) {
+        for (std::size_t i = 0; i < x.dim(0); i++) {
+          s[k] += x(i, k);
+        }
+      }
+    } else if (axis == 1) {
+      for (std::size_t k = 0; k < size; k++) {
+        for (std::size_t j = 0; j < x.dim(1); j++) {
+          s[k] += x(k, j);
+        }
+      }
+    } else {
+      std::cerr << "Sum along an axis not supported.\n";
+    }
+  } else {
+    std::cerr << "Sum along an axis not supported for rank " << rank
+              << " tensor.\n";
+  }
+}
+} // namespace details
+
+/// Mean along an axis
+template <class X, class Y>
+  requires(
+      (::ten::is_tensor_v<X> || ::ten::is_column_v<X> || ::ten::is_row_v<X>) &&
+      ::ten::is_tensor_v<Y>)
+struct mean_axis : func {
+private:
+  std::size_t _axis;
+
+public:
+  using value_type = typename X::value_type;
+  using output_type = Y;
+  static constexpr std::string name() { return std::string("mean"); }
+
+  mean_axis(std::size_t axis) : _axis(axis) {}
+
+  void call(std::shared_ptr<X> &x, std::shared_ptr<Y> &y) {
+    std::size_t size = 1;
+    for (std::size_t i = 0; i < x->rank(); i++) {
+      if (i != _axis) {
+        size *= x->dim(i);
+      }
+    }
+    if (!y) {
+      const std::vector<std::size_t> shape = {size};
+      y = std::make_shared<Y>(shape, ten::storage_format::dense,
+                              x->requires_grad(), x->storage_order());
+    }
+    for (std::size_t i = 0; i < size; i++) {
+      (*y.get())[i] = 0;
+    }
+    details::sum_axis(*x.get(), *y.get(), _axis);
+    // Mean
+    for (std::size_t i = 0; i < size; i++) {
+      (*y.get())[i] /= x->dim(_axis);
+    }
+  }
+};
+
 /// Sum
 template <class X, class Y>
   requires((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
