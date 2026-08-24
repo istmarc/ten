@@ -1,3 +1,4 @@
+#include "linalgebra/least_squares.hxx"
 #include <cmath>
 
 #include <pybind11/attr.h>
@@ -294,6 +295,18 @@ template <typename T> auto py_cholesky(const ten::tensor<T> &a) {
 
 template <typename T> auto py_svd(const ten::tensor<T> &a) {
   return ten::linalg::svd(a);
+}
+
+template <typename T> auto py_lsqr(ten::tensor<T> &A, ten::tensor<T> &b) {
+  return ten::linalg::solve(A, b, ten::linalg::ls_method::qr);
+}
+
+template <typename T> auto py_lslu(ten::tensor<T> &A, ten::tensor<T> &b) {
+  return ten::linalg::solve(A, b, ten::linalg::ls_method::lu);
+}
+
+template <typename T> auto py_lssvd(ten::tensor<T> &A, ten::tensor<T> &b) {
+  return ten::linalg::solve(A, b, ten::linalg::ls_method::svd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -788,12 +801,24 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("qr_float", &py_qr<float>);
   m.def("qr_double", &py_qr<double>);
+
   m.def("lu_float", &py_lu<float>);
   m.def("lu_double", &py_lu<double>);
+
   m.def("cholesky_float", &py_cholesky<float>);
   m.def("cholesky_double", &py_cholesky<double>);
+
   m.def("svd_float", &py_svd<float>);
   m.def("svd_double", &py_svd<double>);
+
+  m.def("lsqr_float", &py_lsqr<float>);
+  m.def("lsqr_double", &py_lsqr<double>);
+
+  m.def("lslu_float", &py_lslu<float>);
+  m.def("lslu_double", &py_lslu<double>);
+
+  m.def("lssvd_float", &py_lssvd<float>);
+  m.def("lssvd_double", &py_lssvd<double>);
 
   /////////////////////////////////////////////////////////////////////////////
   // learning
