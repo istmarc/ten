@@ -1,4 +1,5 @@
 #include "linalgebra/least_squares.hxx"
+#include "sort.hxx"
 #include <cmath>
 
 #include <pybind11/attr.h>
@@ -9,6 +10,7 @@
 #include <ten/linalg>
 #include <ten/ml>
 #include <ten/random>
+#include <ten/sort>
 #include <ten/tensor>
 
 #include <pybind11/operators.h>
@@ -307,6 +309,17 @@ template <typename T> auto py_lslu(ten::tensor<T> &A, ten::tensor<T> &b) {
 
 template <typename T> auto py_lssvd(ten::tensor<T> &A, ten::tensor<T> &b) {
   return ten::linalg::solve(A, b, ten::linalg::ls_method::svd);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Sort
+
+template <typename T> auto py_sort(const ten::tensor<T> &x) {
+  return ten::sort(x);
+}
+
+template <typename T> void py_sort_inplace(ten::tensor<T> &x) {
+  ten::sort_inplace(x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -819,6 +832,15 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("lssvd_float", &py_lssvd<float>);
   m.def("lssvd_double", &py_lssvd<double>);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Sort
+
+  m.def("sort_float", &py_sort<float>);
+  m.def("sort_double", &py_sort<double>);
+
+  m.def("sort_inplace_float", &py_sort_inplace<float>);
+  m.def("sort_inplace_double", &py_sort_inplace<double>);
 
   /////////////////////////////////////////////////////////////////////////////
   // learning
