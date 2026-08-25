@@ -682,6 +682,41 @@ public:
   }
 };
 
+/// Variance
+template <class X, class Y>
+  requires((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
+            ::ten::is_row<X>::value) &&
+           ::ten::is_scalar<Y>::value)
+struct var : func {
+private:
+  bool _biased;
+
+public:
+  static constexpr ::std::string name() { return ::std::string("var"); }
+
+  using output_type = Y;
+
+  var(bool biased) : _biased(biased) {}
+
+  void call(::std::shared_ptr<X> &x, ::std::shared_ptr<Y> &y) {
+    if (!y) {
+      y = ::std::make_shared<Y>(x->requires_grad());
+    }
+    using T = typename Y::value_type;
+    T m = details::mean(*x.get());
+    y->value() = T(0);
+    for (size_t i = 0; i < x->size(); i++) {
+      T diff = (*x.get())[i] - m;
+      y->value() += diff * diff;
+    }
+    if (_biased) {
+      y->value() = y->value() / x->size();
+    } else {
+      y->value() = y->value() / (x->size() - 1);
+    }
+  }
+};
+
 /// Sine
 template <class X, class Y>
   requires(((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
