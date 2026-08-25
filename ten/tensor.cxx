@@ -1,18 +1,17 @@
-#include "linalgebra/least_squares.hxx"
-#include "sort.hxx"
 #include <cmath>
-
-#include <pybind11/attr.h>
 
 #include <ten/types.hxx>
 
 #include <ten/io>
 #include <ten/linalg>
+#include <ten/mcmc>
 #include <ten/ml>
 #include <ten/random>
 #include <ten/sort>
 #include <ten/tensor>
 
+#include <pybind11/attr.h>
+#include <pybind11/functional.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -377,6 +376,20 @@ auto py_rand_unif(
     const std::vector<std::size_t> &dims, T lower_bound, T upper_bound,
     const ten::storage_order order = ten::storage_order::col_major) {
   return ten::rand_unif<T>(dims, lower_bound, upper_bound, false, order);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MCMC
+
+template <typename T>
+auto py_mcmc(T xt, std::size_t n, std::function<T(T)> f, std::function<T(T)> g,
+             std::size_t burn) {
+  return ten::mcmc(xt, n, f, g, burn);
+}
+
+template <typename T>
+auto py_mcmc2(T xt, std::size_t n, std::function<T(T)> f, std::size_t burn) {
+  return ten::mcmc(xt, n, f, burn);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -841,6 +854,15 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("sort_inplace_float", &py_sort_inplace<float>);
   m.def("sort_inplace_double", &py_sort_inplace<double>);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // MCMC
+
+  m.def("mcmc_float", &py_mcmc<float>);
+  m.def("mcmc_double", &py_mcmc<double>);
+
+  m.def("mcmc2_float", &py_mcmc2<float>);
+  m.def("mcmc2_double", &py_mcmc2<double>);
 
   /////////////////////////////////////////////////////////////////////////////
   // learning
