@@ -3513,6 +3513,18 @@ template <Expr ExprType> auto prod(ExprType &&expr) {
   return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
 
+/// \fn std
+/// Return the standard deviation of a tensor or an expression
+template <Expr ExprType> auto std(ExprType &&expr, bool biased = false) {
+  using expr_type = std::remove_cvref_t<ExprType>;
+  using value_type = typename expr_type::value_type;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
+  using output_type = ten::scalar<value_type>;
+  using func_type = ten::functional::std<input_type, output_type>;
+  func_type *f = new func_type(biased);
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
+}
+
 /// \fn abs
 /// Returns the absolute value of a scalar, a tensor or an expression
 template <Expr ExprType> auto abs(ExprType &&expr) {
