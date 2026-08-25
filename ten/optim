@@ -1,0 +1,6 @@
+#ifndef TEN_OPTIM
+#define TEN_OPTIM
+
+#include <ten/optim.hxx>
+
+#endif

@@ -1,0 +1,8 @@
+#ifndef TENSEUR_DATAFRAME
+#define TENSEUR_DATAFRAME
+
+#include <ten/dataframes/dataframe.hxx>
+#include <ten/dataframes/io.hxx>
+#include <ten/dataframes/datasets.hxx>
+
+#endif

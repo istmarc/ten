@@ -1,0 +1,160 @@
+#include <ten/tensor>
+#include <ten/io>
+
+template<typename T>
+requires (ten::is_tensor_v<T> || ten::is_column_v<T> || ten::is_row_v<T>)
+auto absolute_sum(const T& x) -> decltype(auto) {
+   using value_type = T::value_type;
+   value_type s = 0.;
+   for(size_t i = 0; i < x.size(); i++) {
+      s += std::abs(x[i]);
+   }
+   return s;
+}
+
+template<class X, class Y>
+auto dot(const X& x, const Y& y) {
+   using value_type = typename X::value_type;
+   value_type d = 0.;
+   for (size_t i = 0;i < x.size(); i++) {
+      d += x[i] * y[i];
+   }
+   return d;
+}
+
+int main() {
+
+   {
+      std::cout << "For a vector\n";
+      auto a = ten::rand_norm<ten::vector<float>>({10});
+      std::cout << a << std::endl;
+      auto b = ten::asum(a);
+      std::cout << b << std::endl;
+      std::cout << absolute_sum(a) << std::endl;
+   }
+
+   {
+      std::cout << "For a matrix row and column\n";
+      auto a = ten::rand_norm<ten::matrix<float>>({3, 3});
+      std::cout << a << std::endl;
+      auto b = a.col(0);
+      std::cout << "Column = " << b << std::endl;
+      std::cout << ten::asum(b) << std::endl;
+      std::cout << absolute_sum(b) << std::endl;
+      auto c = a.row(0);
+      std::cout << "Row = " << c << std::endl;
+      std::cout << ten::asum(c) << std::endl;
+      std::cout << absolute_sum(c) << std::endl;
+   }
+
+   {
+      std::cout << "axpy with column, column\n";
+      auto a = ten::range<ten::matrix<float>>({3,3});
+      auto col_0 = a.col(0);
+      auto col_1 = a.col(1);
+      ten::axpy(1.0f, col_0, col_1);
+      std::cout << a << std::endl;
+   }
+
+   {
+      std::cout << "axpy with row, row\n";
+      auto a = ten::range<ten::matrix<float>>({3,3});
+      auto row_0 = a.row(0);
+      auto row_1 = a.row(1);
+      ten::axpy(1.0f, row_0, row_1);
+      std::cout << a << std::endl;
+   }
+
+   {
+      std::cout << "ten::copy vectors\n";
+      auto a = ten::range<ten::matrix<float>>({3, 3});
+      auto row_0 = a.row(0);
+      auto row_1 = a.row(1);
+      ten::copy(row_0, row_1);
+      std::cout << a << std::endl;
+      auto col_0 = a.col(0);
+      auto col_1 = a.col(1);
+      ten::copy(col_0, col_1);
+      std::cout << a << std::endl;
+   }
+
+   {
+      std::cout << "iamax\n";
+      auto a = ten::rand_norm<ten::matrix<float>>({3, 3});
+      std::cout << a << std::endl;
+      std::cout << ten::iamax(a.row(0)) << std::endl;
+      std::cout << ten::iamax(a.col(0)) << std::endl;
+   }
+
+   {
+      std::cout << "dot product\n";
+      auto a = ten::rand_norm<ten::vector<float>>({3});
+      auto b = ten::rand_norm<ten::vector<float>>({3});
+      std::cout << a << std::endl;
+      std::cout << b << std::endl;
+      std::cout << ten::dot(a, b) << std::endl;
+      std::cout << dot(a, b) << std::endl;
+   }
+
+   {
+      std::cout << "conjugated dot product\n";
+      ten::vector<std::complex<float>> a({2}, {1.0f+2.0fi, 3.0f-1.0fi});
+      ten::vector<std::complex<float>> b({2}, {2.0f+1.0fi, 3.0f-2.0fi});
+      std::cout << a << std::endl;
+      std::cout << b << std::endl;
+      std::cout << "a*.b = " << ten::dotc(a, b) << std::endl;
+   }
+
+   {
+      std::cout << "nrm2\n";
+      auto a = ten::range<ten::vector<float>>({3}, 1.);
+      std::cout << a << std::endl;
+      std::cout << "nrm2(a) = " << ten::nrm2(a) << std::endl;
+   }
+
+   {
+      std::cout << "scale\n";
+      ten::vector<float> a({3}, {1.0f, 2.0f, 3.0f});
+      ten::scal(0.5f, a);
+      std::cout << a << std::endl;
+   }
+
+   {
+      std::cout << "swap\n";
+      auto a = ten::range<ten::matrix<float>>({3, 3});
+      // this or ten::swap(a.col(0), a.col(1));
+      auto col_0 = a.col(0);
+      auto col_1 = a.col(1);
+      ten::swap(col_0, col_1);
+      std::cout << a << std::endl;
+   }
+
+   {
+      std::cout << "gemv\n";
+      ten::vector<float> y({2}, {-2.0f, 1.0f});
+      ten::matrix<float> a({2, 2}, {1.0f, 2.0f, 3.0f, 4.0f});
+      ten::vector<float> x({2}, {1.0f, 2.0f});
+      ten::gemv(1.0f, a, x, 2.0f, y);
+      std::cout << y << std::endl;
+   }
+
+   {
+      std::cout << "Rank one update\n";
+      ten::matrix<float> a({2, 2}, {1.0f, 3.0f, 2.0f, 4.0f});
+      ten::vector<float> x({2}, {1.0f, 2.0f});
+      ten::vector<float> y({2}, {-2.0f, 1.0f});
+      ten::ger(0.5f, x, y, a);
+      std::cout << a << std::endl;
+   }
+
+   {
+      std::cout << "Rank one update for complex valued matrix\n";
+      ten::matrix<std::complex<float>> a({2, 2}, {1.0f, 3.0f-1.0fi, 2.0fi, 4.0f});
+      ten::vector<std::complex<float>> x({2}, {1.0f, 1.0f});
+      ten::vector<std::complex<float>> y({2}, {-2.0fi, 1.0f+1.0fi});
+      std::complex<float> alpha = 0.5f;
+      ten::ger(alpha, x, y, a);
+      std::cout << a << std::endl;
+   }
+
+}
