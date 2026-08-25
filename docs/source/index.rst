@@ -29,6 +29,7 @@ Ten
    histogram
    multilinear_algebra
    statistics
+   dataframe
    machine_learning
    neural
    odes
