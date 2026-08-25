@@ -1573,6 +1573,14 @@ TensorType deserialize(std::istream &is) {
    return TensorType(std::move(node));
 }*/
 
+// Row major tensor
+template <typename T>
+auto row_major(const std::vector<std::size_t> &dims,
+               const bool requires_grad = false) {
+  ten::tensor<T> x(dims, requires_grad, ten::storage_order::row_major);
+  return x;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Diagonal matrix
 
