@@ -2,3 +2,4 @@ build/
 build-bindings/
 build-examples/
 build-tests/
+build-docs/
