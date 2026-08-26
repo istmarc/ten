@@ -7,9 +7,9 @@
 #include <ten/types.hxx>
 
 namespace ten {
-// Inverse transform method
+// Inverse transform method / Inverse sampling
 template <typename T>
-tensor<T> inv_transform(std::function<T(T)> Finv, const std::size_t size) {
+tensor<T> inv_sample(std::function<T(T)> Finv, const std::size_t size) {
   tensor<T> u = rand_unif<T>({size});
   tensor<T> x({size});
   for (std::size_t i = 0; i < size; i++) {

@@ -1,5 +1,5 @@
-#include "ten/maths/sim.hxx"
 #include <iostream>
+
 #include <ten/tensor>
 #include <ten/io>
 #include <ten/math>
@@ -11,6 +11,6 @@ std::function<float(float)> Finv = [](float y) {
 };
 
 int main() {
-   auto x = ten::inv_transform(Finv, 1000);
+   auto x = ten::inv_sample(Finv, 1000);
    std::cout << x << std::endl;
 }
