@@ -1,9 +1,11 @@
 #include <cmath>
 
+#include <functional>
 #include <ten/types.hxx>
 
 #include <ten/io>
 #include <ten/linalg>
+#include <ten/math>
 #include <ten/mcmc>
 #include <ten/ml>
 #include <ten/random>
@@ -376,6 +378,14 @@ auto py_rand_unif(
     const std::vector<std::size_t> &dims, T lower_bound, T upper_bound,
     const ten::storage_order order = ten::storage_order::col_major) {
   return ten::rand_unif<T>(dims, lower_bound, upper_bound, false, order);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Maths
+
+template <typename T>
+auto py_inv_sample(std::size_t size, std::function<T(T)> Finv) {
+  return ten::inv_sample<T>(size, Finv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -854,6 +864,12 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("sort_inplace_float", &py_sort_inplace<float>);
   m.def("sort_inplace_double", &py_sort_inplace<double>);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Maths
+
+  m.def("inv_sample_float", &py_inv_sample<float>);
+  m.def("inv_sample_double", &py_inv_sample<double>);
 
   /////////////////////////////////////////////////////////////////////////////
   // MCMC
