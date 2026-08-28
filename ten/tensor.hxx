@@ -2906,42 +2906,35 @@ template <class To, Tensor T> auto cast(const T &x) {
   return r;
 }
 
-// TODO reshape(x, shape)
-/*
+// reshape(x, shape)
 template <Expr ExprType>
 [[nodiscard]] auto reshape(ExprType &&expr, std::vector<std::size_t> &dims) {
   using expr_type = typename std::remove_cvref_t<ExprType>;
+  using input_type = typename details::input_type<expr_type>::type;
   using output_type = typename details::output_type<expr_type>::type;
-  return ::ten::unary_expr<
-      expr_type, ::ten::functional::reshape<value_type>::template
-func>(expr,dims);
+  using func_type = ten::functional::reshape<input_type, output_type>;
+  func_type *f = new func_type(dims);
+  return ::ten::unary_expr<expr_type, output_type, func_type>(expr,
+                                                              std::move(f));
 }
 
-template<Expr ExprType>
-[[nodiscard]] auto reshape(ExprType&& expr, std::initializer_list<std::size_t>&&
-dims) { std::vector<std::size_t> shape(std::move(dims)); return reshape(expr,
-shape);
-}*/
+template <Expr ExprType>
+[[nodiscard]] auto reshape(ExprType &&expr,
+                           std::initializer_list<std::size_t> &&dims) {
+  std::vector<std::size_t> shape(std::move(dims));
+  return reshape(expr, shape);
+}
 
-// TODO flatten(x)
-/*template <Expr ExprType> auto flatten(ExprType expr) {
-  using expr_type = std::remove_cvref_t<ExprType>;
-
-  // tensor
-  if constexpr (is_tensor<expr_type>::value) {
-      std::vector<std::size_t> shape = {expr.size()};
-      return reshape(std::forward<expr_type>(expr), shape);
-    }
-  }
-
-  // unar_expr or binary_expr
-  if constexpr (is_unary_expr<expr_type>::value ||
-                is_binary_expr<expr_type>::value) {
-    using output_type = typename expr_type::evaluated_type;
-    using shape_type = typename output_type::shape_type;
-    return reshape<, expr_type>(std::forward<expr_type>(expr));
-  }
-}*/
+// flatten(x)
+template <Expr ExprType> auto flatten(ExprType expr) {
+  using expr_type = typename std::remove_cvref_t<ExprType>;
+  using input_type = typename details::input_type<expr_type>::type;
+  using output_type = typename details::output_type<expr_type>::type;
+  using func_type = ten::functional::flatten<input_type, output_type>;
+  func_type *f = new func_type();
+  return ::ten::unary_expr<expr_type, output_type, func_type>(expr,
+                                                              std::move(f));
+}
 
 // TODO transpose(x)
 /*

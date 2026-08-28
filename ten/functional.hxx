@@ -1711,36 +1711,50 @@ template <Tensor X, Scalar Y, Tensor Z> struct mul<X, Y, Z> : func {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Reshape
+// Reshape and flatten
 
-// Dynamic reshape
-// Shape is the target shape type
-/*
-template <class X, class Y> struct dynamic_reshape {
+/// Reshape
+template <class X, class Y>
+  requires((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
+            ::ten::is_row<X>::value) &&
+           ::ten::is_tensor<Y>::value)
+struct reshape : ::ten::functional::func {
+  static constexpr ::std::string name() { return ::std::string("reshape"); }
 
-   template <class X, class Y>
-      requires((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
-                ::ten::is_row<X>::value) &&
-               ::ten::is_tensor<Y>::value)
-   struct func : ::ten::functional::func<true, true> {
-      static constexpr ::std::string name() { return ::std::string("reshape"); }
+public:
+  using output_type = Y;
 
-    public:
-      using output_type = Y;
+private:
+  ::std::vector<::std::size_t> _shape;
 
-    private:
-      Shape _shape;
+public:
+  reshape(const ::std::vector<::std::size_t> &s) : _shape(s) {}
+  reshape(::std::vector<::std::size_t> &&s) : _shape(::std::move(s)) {}
 
-    public:
-      func(const Shape &s) : _shape(s) {}
-      func(Shape &&s) : _shape(::std::move(s)) {}
+  void call(::std::shared_ptr<X> &x, ::std::shared_ptr<Y> &y) {
+    y = ::std::make_shared<Y>(x->node(), _shape, ten::storage_format::dense,
+                              x->requires_grad(), x->storage_order());
+  }
+};
 
-      void operator()(::std::shared_ptr<X> &x, ::std::shared_ptr<Y> &y) {
-         // Does not copy the data
-         y = ::std::make_shared<Y>(x->node(), _shape, x->format());
-      }
-   };
-};*/
+/// Flatten
+template <class X, class Y>
+  requires((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
+            ::ten::is_row<X>::value) &&
+           ::ten::is_tensor<Y>::value)
+struct flatten : ::ten::functional::func {
+  static constexpr ::std::string name() { return ::std::string("flatten"); }
+
+public:
+  using output_type = Y;
+
+public:
+  void call(::std::shared_ptr<X> &x, ::std::shared_ptr<Y> &y) {
+    ::std::vector<::std::size_t> shape({x->size()});
+    y = ::std::make_shared<Y>(x->node(), shape, ten::storage_format::dense,
+                              x->requires_grad(), x->storage_order());
+  }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Transpose a matrix
