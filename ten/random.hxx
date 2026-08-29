@@ -38,14 +38,14 @@ auto rand_norm(std::initializer_list<size_t> &&dims,
 }
 
 // rand_norm<T>(dims, mean, std, requires_grad, order)
-template <typename T>
+template <typename T = float>
   requires(::ten::is_float<T>::value || ::ten::is_double<T>::value)
 auto rand_norm(const std::vector<std::size_t> &shape, const T mean = 0.,
                const T std = 1., const bool requires_grad = false,
                const storage_order order = ten::storage_order::col_major) {
   return rand_norm<ten::tensor<T>>(shape, mean, std, requires_grad, order);
 }
-template <typename T>
+template <typename T = float>
   requires(::ten::is_float<T>::value || ::ten::is_double<T>::value)
 auto rand_norm(std::initializer_list<std::size_t> &&dims, const T mean = 0.,
                const T std = 1., const bool requires_grad = false,
@@ -85,7 +85,7 @@ auto rand_unif(std::initializer_list<size_t> &&dims,
 }
 
 // rand_unif<T>(dims, lower_bound, upper_bound, requires_grad, order)
-template <typename T>
+template <typename T = float>
   requires(::ten::is_float<T>::value || ::ten::is_double<T>::value)
 auto rand_unif(const std::vector<std::size_t> &shape, const T lower_bound = 0.,
                const T upper_bound = 1., const bool requires_grad = false,
@@ -93,7 +93,7 @@ auto rand_unif(const std::vector<std::size_t> &shape, const T lower_bound = 0.,
   return rand_unif<ten::tensor<T>>(shape, lower_bound, upper_bound,
                                    requires_grad, order);
 }
-template <typename T>
+template <typename T = float>
   requires(::ten::is_float<T>::value || ::ten::is_double<T>::value)
 auto rand_unif(std::initializer_list<std::size_t> &&dims,
                const T lower_bound = 0., const T upper_bound = 1.,
