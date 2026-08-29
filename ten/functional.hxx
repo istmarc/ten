@@ -652,16 +652,16 @@ template <class X, class Y>
   requires((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
             ::ten::is_row<X>::value) &&
            ::ten::is_scalar<Y>::value)
-struct std : func {
+struct stddev : func {
 private:
   bool _biased;
 
 public:
-  static constexpr ::std::string name() { return ::std::string("std"); }
+  static constexpr ::std::string name() { return ::std::string("stddev"); }
 
   using output_type = Y;
 
-  std(bool biased) : _biased(biased) {}
+  stddev(bool biased) : _biased(biased) {}
 
   void call(::std::shared_ptr<X> &x, ::std::shared_ptr<Y> &y) {
     if (!y) {
