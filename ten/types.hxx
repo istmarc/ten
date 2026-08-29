@@ -123,7 +123,7 @@ public:
 };
 
 /// Tensor type
-template <typename T> class tensor;
+template <typename T = float> class tensor;
 
 /// Column type
 template <typename T> class column;
@@ -175,7 +175,7 @@ static constexpr bool is_dense_storage_v = is_dense_storage<T>::value;
 ////////////////////////////////////////////////////////////////////////////////
 
 // Scalar
-template <typename T> class scalar;
+template <typename T = float> class scalar;
 
 // Scalar node
 template <typename T> class scalar_node;
@@ -214,7 +214,7 @@ static constexpr bool is_binary_expr_v = is_binary_expr<T>::value;
 /////////////////////////////////////////////////////////////////////////////////
 // Diagonal
 
-template <typename T> class diagonal;
+template <typename T = float> class diagonal;
 
 template <class> struct is_diagonal : std::false_type {};
 
@@ -234,7 +234,7 @@ template <class T>
 struct is_sparse_storage<sparse_storage<T>> : std::true_type {};
 
 // Forward declaration of sparse tensor
-template <typename T> class sparse_tensor;
+template <typename T = float> class sparse_tensor;
 
 template <class> struct is_sparse_tensor : std::false_type {};
 
