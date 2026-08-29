@@ -1750,7 +1750,7 @@ public:
 
 public:
   void call(::std::shared_ptr<X> &x, ::std::shared_ptr<Y> &y) {
-    ::std::vector<::std::size_t> shape({x->size()});
+    ::std::vector<::std::size_t> shape = {x->size()};
     y = ::std::make_shared<Y>(x->node(), shape, ten::storage_format::dense,
                               x->requires_grad(), x->storage_order());
   }

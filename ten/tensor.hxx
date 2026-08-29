@@ -2908,7 +2908,8 @@ template <class To, Tensor T> auto cast(const T &x) {
 
 // reshape(x, shape)
 template <Expr ExprType>
-[[nodiscard]] auto reshape(ExprType &&expr, std::vector<std::size_t> &dims) {
+[[nodiscard]] auto reshape(ExprType &&expr,
+                           const std::vector<std::size_t> &dims) {
   using expr_type = typename std::remove_cvref_t<ExprType>;
   using input_type = typename details::input_type<expr_type>::type;
   using output_type = typename details::output_type<expr_type>::type;

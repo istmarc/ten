@@ -1,3 +1,4 @@
+#include "tensor.hxx"
 #include <cmath>
 
 #include <functional>
@@ -140,6 +141,15 @@ template <typename T> auto py_floor(ten::tensor<T> &x) {
 
 template <typename T> auto py_ceil(ten::tensor<T> &x) {
   return ten::ceil(x).eval();
+}
+
+template <typename T>
+auto py_reshape(ten::tensor<T> &x, const std::vector<std::size_t> &dims) {
+  return ten::reshape(x, dims).eval();
+}
+
+template <typename T> auto py_flatten(ten::tensor<T> &x) {
+  return ten::flatten(x).eval();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -723,6 +733,12 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("ceil_float", &py_ceil<float>);
   m.def("ceil_double", &py_ceil<double>);
+
+  m.def("reshape_float", &py_reshape<float>);
+  m.def("reshape_double", &py_reshape<double>);
+
+  m.def("flatten_float", &py_flatten<float>);
+  m.def("flatten_double", &py_flatten<double>);
 
   m.def("pow_float", &py_pow<float>);
   m.def("pow_double", &py_pow<double>);
