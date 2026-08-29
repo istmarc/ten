@@ -2993,14 +2993,14 @@ template <class T>
 }
 
 // fill<T>(shape, value)
-template <typename T>
+template <typename T = float>
 [[nodiscard]] auto fill(const std::vector<std::size_t> &dims, T value,
                         const bool requires_grad = false,
                         const storage_order order = storage_order::col_major) {
   using tensor_type = tensor<T>;
   return fill<tensor_type>(dims, value, requires_grad, order);
 }
-template <typename T>
+template <typename T = float>
 [[nodiscard]] auto fill(std::initializer_list<std::size_t> &&dims, T value,
                         bool requires_grad = false,
                         const storage_order order = storage_order::col_major) {
@@ -3026,13 +3026,13 @@ template <class T>
   return zeros<T>(std::move(dims), requires_grad, order);
 }
 // zeros<T>(shape)
-template <typename T>
+template <typename T = float>
 [[nodiscard]] auto zeros(const std::vector<std::size_t> &dims,
                          const bool requires_grad = false,
                          const storage_order order = storage_order::col_major) {
   return zeros<tensor<T>>(dims, requires_grad, order);
 }
-template <typename T>
+template <typename T = float>
 [[nodiscard]] auto zeros(std::initializer_list<std::size_t> &&dims,
                          const bool requires_grad = false,
                          const storage_order order = storage_order::col_major) {
@@ -3061,13 +3061,13 @@ template <class T>
 }
 
 // ones<T>(shape)
-template <class T>
+template <class T = float>
 [[nodiscard]] auto ones(const std::vector<std::size_t> &dims,
                         const bool requires_grad = false,
                         const storage_order order = storage_order::col_major) {
   return fill<tensor<T>>(dims, T(1), requires_grad, order);
 }
-template <class T>
+template <class T = float>
 [[nodiscard]] auto ones(std::initializer_list<std::size_t> &&dims,
                         const bool requires_grad = false,
                         const storage_order order = storage_order::col_major) {
@@ -3103,13 +3103,13 @@ range(std::initializer_list<size_type> &&dims,
 }
 
 // range<T>(shape, value)
-template <class T>
+template <class T = float>
 [[nodiscard]] auto range(const std::vector<std::size_t> &dims, T value = T(0),
                          const bool requires_grad = false,
                          const storage_order order = storage_order::col_major) {
   return range<tensor<T>>(dims, value, requires_grad, order);
 }
-template <class T>
+template <class T = float>
 [[nodiscard]] auto range(std::initializer_list<std::size_t> &&dims,
                          T value = T(0), const bool requires_grad = false,
                          const storage_order order = storage_order::col_major) {
@@ -3145,14 +3145,14 @@ linear(std::initializer_list<std::size_t> &&dims, typename T::value_type start,
 }
 
 // linear<T>(shape, start, stop, requires_grad, order)
-template <typename T>
+template <typename T = float>
 [[nodiscard]] auto
 linear(const std::vector<std::size_t> &dims, T start, T stop,
        const bool requires_grad = false,
        const storage_order order = storage_order::col_major) {
   return linear<tensor<T>>(dims, start, stop, requires_grad, order);
 }
-template <typename T>
+template <typename T = float>
 [[nodiscard]] auto
 linear(std::initializer_list<std::size_t> &&dims, T start, T stop,
        const bool requires_grad = false,
