@@ -67,19 +67,25 @@ An expression API class for representing unary and binary operations between ten
 ```c++
 // Uninitialized tensors
 ten::tensor<float> x({2, 3, 4});
-// Access indices
+// Assign and access indices
 x(0, 1, 2) = 3.0f;
 std::cout << x(0, 1, 2) << std::endl;
-// Slicing using sequences ten::seq
-using ten::seq;
-auto slice = x(seq(0, last), seq(0, last), seq(1, 2));
-// Assign to slice
-slice = 1.0f;
-// Slicing using multidimensional sequences ten::mdseq
-using ten::mdseq;
-auto index = mdseq<3>(seq(0, last), seq(0, last), seq(0, 1));
-auto second_slice = x[index];
-second_slice = 2.0f;
+```
+
+- Default float tensors
+
+```c++
+// Uninitialized float32 tensor
+constexpr std::size_t n = 3;
+ten::tensor x({n, n});
+// Initialize
+auto zeros = ten::zeros({n, n})
+auto ones = ten::ones({n, n});
+auto fill = ten::fill({n, n}, .5);
+auto lin = ten::linear({n, n}, 0., 1.);
+// Random
+auto norm = ten::rand_norm({n, n});
+auto unif = ten::rand_unif({n, n});
 ```
 
 - Slicing, assignment, rows and columns
@@ -92,11 +98,17 @@ x = 1.0f;
 x.row(0) = 2.0f;
 x.col(0) = 3.0f;
 std::cout << x << std::endl;
+// Slicing using sequences
 using ten::seq;
 using ten::last;
-auto slice = x(seq(1, last), seq(0, 1));
-slice = 99.0f;
+auto slice = x(seq(1, last), seq(1, 2));
+slice = .3f;
 std::cout << x << std::endl;
+// Slicing using multidimensional sequences ten::mdseq
+using ten::mdseq;
+auto index = mdseq(seq(0, last), seq(0));
+auto second_slice = x[index];
+second_slice = .5f;
 ```
 
 - Gemm with expressions matching
