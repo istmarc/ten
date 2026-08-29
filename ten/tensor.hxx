@@ -44,24 +44,24 @@ struct seq {
   explicit seq(std::size_t start) : _start(start), _end(start + 1) {}
 };
 
-/*
 /// Multidimentional sequence
-template <size_t Rank> struct mdseq {
-   std::array<size_t, Rank> _start;
-   std::array<size_t, Rank> _end;
+struct mdseq {
+  std::vector<std::size_t> _start;
+  std::vector<std::size_t> _end;
 
-   mdseq(auto... sequences)
-      requires(std::is_same_v<decltype(sequences...[0]), seq> &&
-               sizeof...(sequences) == Rank)
-   {
-      std::array<seq, Rank> arr{sequences...};
-      for (size_t i = 0; i < Rank; i++) {
-         _start[i] = arr[i]._start;
-         _end[i] = arr[i]._end;
-      }
-   }
+  mdseq(auto... sequences)
+    requires(std::is_same_v<decltype(sequences...[0]), seq>)
+  {
+    std::size_t rank = sizeof...(sequences);
+    std::vector<seq> arr = {sequences...};
+    _start.resize(rank);
+    _end.resize(rank);
+    for (size_t i = 0; i < rank; i++) {
+      _start[i] = arr[i]._start;
+      _end[i] = arr[i]._end;
+    }
+  }
 };
-*/
 
 // Add two expr
 template <Expr LeftExpr, Expr RightExpr>
@@ -1253,25 +1253,11 @@ public:
     return (*_node.get())[index];
   }
 
-  // TODO Overload the [] operator for mdseq
-  /*
- [[nodiscard]] inline tensor_view_type
- operator[](mdseq<Shape::rank()> sequences) const noexcept {
-   if constexpr (Shape::is_dynamic()) {
-     for (size_t i = 0; i < Shape::rank(); i++) {
-       if (sequences._end[i] == 0) {
-         sequences._end[i] = _shape.value().dim(i);
-       }
-     }
-   } else {
-     for (size_t i = 0; i < Shape::rank(); i++) {
-       if (sequences._end[i] == 0) {
-         sequences._end[i] = Shape::static_dim(i);
-       }
-     }
-   }
-   return tensor_view_type(*this, sequences._start, sequences._end);
- }*/
+  // Overload the [] operator for mdseq
+  [[nodiscard]] inline view<T>
+  operator[](const mdseq &sequences) const noexcept {
+    return view<T>(*this, sequences._start, sequences._end);
+  }
 
   // Overload the ()  operator for seq
   [[nodiscard]] inline view<T> operator()(auto... index) noexcept
