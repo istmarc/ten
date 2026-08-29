@@ -1,6 +1,7 @@
 #ifndef TEN_UTILS_HXX
 #define TEN_UTILS_HXX
 
+#include <ten/datetime.hxx>
 #include <ten/types.hxx>
 
 #include <complex>
@@ -35,6 +36,8 @@ template <> std::string to_string<std::complex<double>>() {
 
 template <> std::string to_string<std::string>() { return "string"; }
 
+template <> std::string to_string<ten::date>() { return "date"; }
+
 template <class> ten::data_type to_data_type();
 
 template <> ten::data_type to_data_type<bool>() {
@@ -66,6 +69,9 @@ template <> ten::data_type to_data_type<std::complex<double>>() {
 }
 template <> ten::data_type to_data_type<std::string>() {
   return ten::data_type::string;
+}
+template <> ten::data_type to_data_type<ten::date>() {
+  return ten::data_type::date;
 }
 
 inline std::ostream &operator<<(std::ostream &os, const data_type d) {
@@ -99,6 +105,9 @@ inline std::ostream &operator<<(std::ostream &os, const data_type d) {
     break;
   case data_type::string:
     os << "std::string";
+    break;
+  case data_type::date:
+    os << "ten::date";
     break;
   }
   return os;
