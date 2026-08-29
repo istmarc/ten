@@ -25,7 +25,7 @@ Markov Chain Monte Carlo (MCMC) methods are implemented in ``ten/mcmc``.
          return y + dist.sample();
       };
 
-      return ten::mcmc(0.f, n, f, g);
+      return ten::mcmc(xt, n, f, g);
    }
 
    int main() {
@@ -51,7 +51,7 @@ Markov Chain Monte Carlo (MCMC) methods are implemented in ``ten/mcmc``.
          return std::exp((-1. / (2 * sigma * sigma)) * (v*v));
       };
 
-      return ten::mcmc(0.f, n, f);
+      return ten::mcmc(xt, n, f);
    }
 
    int main() {
