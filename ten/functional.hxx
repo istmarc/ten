@@ -717,6 +717,60 @@ public:
   }
 };
 
+/// Argmin
+template <class X, class Y>
+  requires((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
+            ::ten::is_row<X>::value) &&
+           ::ten::is_scalar<Y>::value)
+struct argmin : func {
+  static constexpr ::std::string name() { return ::std::string("argmin"); }
+
+  using output_type = Y;
+
+  void call(::std::shared_ptr<X> &x, ::std::shared_ptr<Y> &y) {
+    if (!y) {
+      y = ::std::make_shared<Y>(x->requires_grad());
+    }
+    using type = typename Y::value_type;
+    ::std::size_t arg = 0;
+    type min = (*x.get())[0];
+    for (::std::size_t i = 1; i < x->size(); i++) {
+      if ((*x.get())[i] < min) {
+        min = (*x.get())[i];
+        arg = i;
+      }
+    }
+    y->value() = arg;
+  }
+};
+
+/// Argmax
+template <class X, class Y>
+  requires((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||
+            ::ten::is_row<X>::value) &&
+           ::ten::is_scalar<Y>::value)
+struct argmax : func {
+  static constexpr ::std::string name() { return ::std::string("argmax"); }
+
+  using output_type = Y;
+
+  void call(::std::shared_ptr<X> &x, ::std::shared_ptr<Y> &y) {
+    if (!y) {
+      y = ::std::make_shared<Y>(x->requires_grad());
+    }
+    using type = typename Y::value_type;
+    ::std::size_t arg = 0;
+    type max = (*x.get())[0];
+    for (::std::size_t i = 1; i < x->size(); i++) {
+      if ((*x.get())[i] > max) {
+        max = (*x.get())[i];
+        arg = i;
+      }
+    }
+    y->value() = arg;
+  }
+};
+
 /// Sine
 template <class X, class Y>
   requires(((::ten::is_tensor<X>::value || ::ten::is_column<X>::value ||

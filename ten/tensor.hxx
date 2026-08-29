@@ -3176,18 +3176,18 @@ linear(std::initializer_list<std::size_t> &&dims, T start, T stop,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// TODO Identity
+// Identity
 
 /*
 // identity<matrix<...>>(shape)
-template <Tensor T>
-[[nodiscard]] auto identity(std::vector<std::size_t> &dims) {
+template <claa T>
+requires(is_tensor_v<T>)
+[[nodiscard]] auto identity(const std::vector<std::size_t> &dims) {
   using value_type = typename T::value_type;
-  using shape_type = typename T::shape_type;
 
   size_type m = std::min(shape.dim(0), shape.dim(1));
   size_type n = shape.size();
-  T x(std::forward<shape_type>(shape));
+  T x(dims);
   for (size_type i = 0; i < m; i++) {
     x(i, i) = value_type(1);
   }
@@ -3707,6 +3707,26 @@ template <Expr ExprType> auto ceil(ExprType &&expr) {
   using input_type = typename ::ten::details::input_type<expr_type>::type;
   using output_type = typename ::ten::details::output_type<expr_type>::type;
   using func_type = ten::functional::ceil<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
+}
+
+/// \fn argmin
+template <Expr ExprType> auto argmin(ExprType &&expr) {
+  using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
+  using output_type = ten::scalar<std::size_t>;
+  using func_type = ten::functional::argmin<input_type, output_type>;
+  func_type *f = new func_type();
+  return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
+}
+
+/// \fn argmax
+template <Expr ExprType> auto argmax(ExprType &&expr) {
+  using expr_type = std::remove_cvref_t<ExprType>;
+  using input_type = typename ::ten::details::input_type<expr_type>::type;
+  using output_type = ten::scalar<std::size_t>;
+  using func_type = ten::functional::argmax<input_type, output_type>;
   func_type *f = new func_type();
   return unary_expr<expr_type, output_type, func_type>(expr, std::move(f));
 }
