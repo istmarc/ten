@@ -1,5 +1,5 @@
-#ifndef TENSEUR_GRAPH
-#define TENSEUR_GRAPH
+#ifndef TEN_GRAPH
+#define TEN_GRAPH
 
 #include <ten/graphs/types.hxx>
 #include <ten/graphs/gmatrix.hxx>

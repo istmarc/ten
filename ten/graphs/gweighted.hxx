@@ -1,5 +1,5 @@
-#ifndef TENSEUR_GRAPH_THEORY_GWEIGHTED
-#define TENSEUR_GRAPH_THEORY_GWEIGHTED
+#ifndef TEN_GRAPHS_GWEIGHTED_HXX
+#define TEN_GRAPHS_GWEIGHTED_HXX
 
 #include <ten/tensor>
 
@@ -10,7 +10,7 @@ namespace ten {
 namespace graph {
 
 /// Graph as a weighted ajanceny list
-template <class T, class W = float> class gweighted {
+template <class T = std::size_t, class W = float> class gweighted {
  private:
    ten::graph::graph_type _type;
    std::map<T, std::vector<std::pair<T, W>>> _graph;
@@ -57,11 +57,11 @@ template <class T, class W = float> class gweighted {
    }
 
    // Get the adjacency matrix
-   auto matrix() -> ::ten::matrix<W> {
-      size_t n = _graph.size();
-      ::ten::matrix<W> m = ::ten::zeros<::ten::matrix<W>>({n, n});
-      std::map<T, size_t> map;
-      size_t i = 0;
+   auto matrix() -> ten::tensor<W> {
+      std::size_t n = _graph.size();
+      ten::tensor<W> m = ten::zeros<W>({n, n});
+      std::map<T, std::size_t> map;
+      std::size_t i = 0;
       for (auto it = _graph.begin(); it != _graph.end(); it++) {
          map[it->first] = i;
          i++;

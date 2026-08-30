@@ -1,5 +1,5 @@
-#ifndef TENSEUR_GRAPHS_GMATRIX
-#define TENSEUR_GRAPHS_GMATRIX
+#ifndef TEN_GRAPHS_GMATRIX_HXX
+#define TEN_GRAPHS_GMATRIX_HXX
 
 #include <ten/tensor>
 #include <ten/io>
@@ -12,13 +12,13 @@ template<class T = float>
 class gmatrix{
    private:
       size_t _vertices;
-      ten::matrix<T> _m;
+      ten::tensor<T> _m;
       graph_type _gtype;
 
    public:
       gmatrix(const size_t vertices, const graph_type gtype = graph_type::undirected):
          _vertices(vertices), _gtype(gtype) {
-         _m = ten::zeros<ten::matrix<T>>({vertices, vertices});
+         _m = ten::zeros<T>({vertices, vertices});
       }
 
    void add_edge(size_t src, size_t dest, const T value = 1.0) {

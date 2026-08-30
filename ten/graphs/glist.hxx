@@ -1,5 +1,5 @@
-#ifndef TENSEUR_GRAPH_THEORY_GLIST
-#define TENSEUR_GRAPH_THEORY_GLIST
+#ifndef TEN_GRAPHS_GLIST_HXX
+#define TEN_GRAPHS_GLIST_HXX
 
 #include <ten/tensor>
 
@@ -14,7 +14,7 @@ namespace ten {
 namespace graph {
 
 /// Graph as an unweighted adjacency list
-template<class T>
+template<class T = std::size_t>
 class glist {
  private:
    ten::graph::graph_type _type;
@@ -41,24 +41,26 @@ class glist {
    }
 
    // Get the adjacency matrix
-   auto matrix() -> ten::matrix<float> {
+  template<typename Type = float>
+   auto matrix() -> ten::tensor<Type> {
       size_t n = _graph.size();
-      ten::matrix<float> m = ten::zeros<ten::matrix<float>>({n, n});
-      std::map<T, size_t> map;
-      size_t i = 0;
+      ten::tensor<Type> m = ten::zeros<Type>({n, n});
+      std::map<T, std::size_t> map;
+      std::size_t i = 0;
       for (auto it = _graph.begin(); it != _graph.end(); it++) {
          map[it->first] = i;
          i++;
       }
       for (auto const &[src, value] : _graph) {
          for (auto dest : value) {
-            m(map[src], map[dest]) = 1.;
+            m(map[src], map[dest]) = Type(1);
          }
       }
       return m;
    }
 
-   void dfs(const T& u, std::function<void(const T&)> f) {
+  template<class F>
+   void dfs(const T& u, F f) {
       std::stack<T> stack;
       stack.push(u);
       std::unordered_set<T> visited;
@@ -77,7 +79,8 @@ class glist {
       }
    }
 
-   void bfs(const T& u, std::function<void(const T&)> f) {
+  template<class F>
+   void bfs(const T& u, F f) {
       std::queue<T> queue;
       queue.push(u);
       std::unordered_set<T> visited;
