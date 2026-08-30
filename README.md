@@ -20,6 +20,7 @@ An expression API class for representing unary and binary operations between ten
 - [x] Probability distributions and random numbers generation
 - [x] Generate automatic python bindings ([tenpy](https://github.com/istmarc/tenpy))
 - [x] Tensor views and slicing
+- [x] Sorting
 
 ## Roadmap
 - [] Chain expressions
@@ -36,7 +37,6 @@ An expression API class for representing unary and binary operations between ten
 
 ## Long term
 - [] Linear algebra and least squares
-- [] Sorting
 - [] Combinatorics
 - [] Quasi random sequences
 - [] Tensor broadcasting
@@ -70,6 +70,8 @@ ten::tensor<float> x({2, 3, 4});
 // Assign and access indices
 x(0, 1, 2) = 3.0f;
 std::cout << x(0, 1, 2) << std::endl;
+// Access linear indices
+x[20] = 1.0f;
 ```
 
 - Default float tensors
