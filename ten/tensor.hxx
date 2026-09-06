@@ -1389,7 +1389,7 @@ public:
   }*/
 
   // Data type
-  [[nodiscard]] inline ten::data_type data_type() noexcept {
+  [[nodiscard]] inline ten::data_type data_type() const noexcept {
     return to_data_type<T>();
   }
 
@@ -1602,7 +1602,7 @@ public:
       const std::shared_ptr<node_type> &node, const std::vector<size_t> &dims,
       const bool requires_grad = false,
       const ::ten::storage_order order = ::ten::storage_order::col_major)
-      : _requires_grad(requires_grad), _order(order), _shape(shape),
+      : _requires_grad(requires_grad), _order(order), _shape(dims),
         _stride(ten::details::compute_strides(_shape, _order)), _node(node) {
     if (dims.size() != 2) {
       std::cerr << "diagonal must be a matrix.\n";
@@ -1893,7 +1893,7 @@ private:
     if constexpr (tail_size == 0) {
       return (*_node.get())[index];
     }
-    std::vector<std::size_t> indices = {index, static_cast<size_type>(tail)...};
+    std::vector<std::size_t> indices = {index, static_cast<std::size_t>(tail)...};
     std::size_t idx = details::linear_index(_stride, indices);
     return (*_node.get())[idx];
   }
@@ -2138,7 +2138,7 @@ public:
     } else if (r == 3) {
       for (size_t i = _start[0]; i < _end[0]; i++) {
         for (size_t j = _start[1]; j < _end[1]; j++) {
-          for (size_t k = _start[2]; j < _end[2]; k++) {
+          for (size_t k = _start[2]; k < _end[2]; k++) {
             _data(i, j, k) = value;
           }
         }
