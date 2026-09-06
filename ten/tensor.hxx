@@ -1282,23 +1282,15 @@ public:
     return view<T>(*this, starts, ends);
   }
 
-  // TODO Get the column
-  /*
- [[nodiscard]] auto col(const size_t index) const -> decltype(auto)
-   requires(Shape::rank() == 2 && Shape::is_dynamic())
- {
-   return ranked_column<T, Shape, order, Storage, Allocator>(
-       index, _shape.value(), _node);
- }*/
+  // Get the column
+  [[nodiscard]] auto col(const size_t index) const -> decltype(auto) {
+    return column<T>(index, _shape, _node);
+  }
 
-  // TODO Get the row
-  /*
- [[nodiscard]] auto row(const size_t index) -> decltype(auto)
-   requires(Shape::rank() == 2 && Shape::is_dynamic())
- {
-   return ranked_row<T, Shape, order, Storage, Allocator>(
-       index, _shape.value(), _node);
- }*/
+  // Get the row
+  [[nodiscard]] auto row(const size_t index) -> decltype(auto) {
+    return ::ten::row<T>(index, _shape, _node);
+  }
 
   // Returns the shared ptr to the gradient node
   [[nodiscard]] std::shared_ptr<node_type> grad_node() const { return _grad; }
@@ -2445,14 +2437,9 @@ template <typename T> ten::tensor<T> upper_tr(const ten::tensor<T> &t) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// TODO Columns
-/*
-template <class T>
-class column final
-    : public ten::expr, public ::ten::tensor_base {
-
+// Columns
+template <class T> class column final : public expr, public tensor_base {
 public:
-
   /// \typedef base_type
   /// Type of the tensor operations.
   using base_type = tensor<T>;
@@ -2462,64 +2449,57 @@ public:
   using node_type = tensor_node<T>;
 
 private:
-  // FOrmat is dense
-  // _shape = {}
+  // Format is dense
   size_t _index = 0;
-   std::vector<std::size_t> _shape = {};
+  std::vector<std::size_t> _shape = {};
 
   std::shared_ptr<node_type> _node = nullptr;
 
 public:
-  /// Constructors for dynamic ranked_column
-  ranked_column(const size_t index, const Shape &shape,
-                const std::shared_ptr<node_type> &node) noexcept
-    requires(Shape::is_dynamic())
-      : _node(node), _shape(shape), _index(index) {}
-
-  /// Constructor for static ranked_column
-  ranked_column(const size_t index,
-                const std::shared_ptr<node_type> &node) noexcept
-    requires(Shape::is_static())
-      : _index(index), _node(node) {}
+  /// Constructor
+  column(const size_t index, const std::vector<std::size_t> &shape,
+         const std::shared_ptr<node_type> &node) noexcept
+      : _index(index), _shape(shape), _node(node) {}
 
   /// Copy constructor
-  ranked_column(const ranked_column &t) { _node = t._node; }
+  column(const column &t) = default;
   /// Move constructor
-  ranked_column(ranked_column &&t) { _node = std::move(t._node); }
-
+  column(column &&t) = default;
   /// Assignment operator
-  ranked_column &operator=(const ranked_column &t) {
+  column &operator=(const column &t) {
+    _index = t._index;
+    _shape = t._shape;
     _node = t._node;
     return *this;
   }
   /// Assignment operator
-  ranked_column &operator=(ranked_column &&t) {
+  column &operator=(column &&t) {
+    _index = std::move(t._index);
+    _shape = std::move(t._shape);
     _node = std::move(t._node);
     return *this;
   }
 
   /// Returns the shape
-  [[nodiscard]] inline const Shape &shape() const { return _shape.value(); }
+  [[nodiscard]] inline const std::vector<std::size_t> &shape() const {
+    return _shape;
+  }
 
   /// Returns the strides
+  /*
   [[nodiscard]] inline const typename base_type::stride_type &strides() const {
      return _node.get()->strides();
-  }
+  }*/
 
   /// Returns the dynamic size
   [[nodiscard]] inline size_type size() const {
     // The size is the number of rows
-    if constexpr (Shape::is_dynamic()) {
-      return _shape.value().dim(0);
-    }
-    if constexpr (Shape::is_static()) {
-      return Shape::template static_dim<0>();
-    }
+    return _shape[0];
   }
 
   /// Returns the index'th dynamic dimension
   [[nodiscard]] inline size_type dim(size_type index) const {
-    return _shape.value().dim(index);
+    return _shape[index];
   }
 
   // Returns the shared ptr to the node
@@ -2527,146 +2507,93 @@ public:
 
   /// Get the data
   [[nodiscard]] const T *data() const {
-    size_t rows = this->shape().dim(0);
+    size_t rows = _shape[0];
     return _node.get()->data() + _index * rows;
   }
 
   /// Get the data
   [[nodiscard]] T *data() {
-    size_t rows = this->shape().dim(0);
+    size_t rows = _shape[0];
     return _node.get()->data() + _index * rows;
   }
 
   /// Returns the shared ptr to the storage
+  /*
   [[nodiscard]] std::shared_ptr<Storage> storage() const {
     return _node.get()->storage();
+  }*/
+
+  /// Overloading the [] operator
+  [[nodiscard]] inline const T &operator[](size_type index) const noexcept {
+    size_t rows = _shape[0];
+    return (*_node.get())[index + _index * rows];
   }
 
   /// Overloading the [] operator
-  [[nodiscard]] inline const typename base_type::value_type &
-  operator[](size_type index) const noexcept {
-    if constexpr (Shape::is_dynamic()) {
-      size_t rows = this->shape().dim(0);
-      return (*_node.get())[index + _index * rows];
-    }
-    if constexpr (Shape::is_static()) {
-      size_t rows = Shape::template static_dim<0>();
-      return (*_node.get())[index + _index * rows];
-    }
-  }
-
-  /// Overloading the [] operator
-  [[nodiscard]] inline typename base_type::value_type &
-  operator[](size_type index) noexcept {
-    if constexpr (Shape::is_dynamic) {
-      size_t rows = this->shape().dim(0);
-      return (*_node.get())[index + _index * rows];
-    }
-    if constexpr (Shape::is_static()) {
-      size_t rows = Shape::template static_dim<0>();
-      return (*_node.get())[index + _index * rows];
-    }
-  }
-
-  /// Asignment from a static expression
-  template <class ExprType>
-    requires((::ten::is_unary_expr<std::remove_cvref_t<ExprType>>::value ||
-              ::ten::is_binary_expr<std::remove_cvref_t<ExprType>>::value) &&
-             std::remove_cvref_t<ExprType>::output_type::is_static())
-  ranked_column &operator=(ExprType &&expr) noexcept {
-    using expr_type = std::remove_cvref_t<ExprType>;
-    using evaluated_type = typename expr_type::output_type;
-
-    static_assert(::ten::is_tensor<evaluated_type>::value,
-                  "Error: Evaluated type must be a tensor.");
-
-    auto value = expr.eval();
-
-    // FIXME maybe static_assert(Shape::template  ==
-    // evaluated_type::static_size(),
-    //               "Expected equal shape size.");
-    size_t rows = _shape.value().dim(0);
-    for (size_t idx = 0; idx < rows; idx++) {
-      (*_node.get())[idx + _index * rows] = value[idx];
-    }
-    return *this;
+  [[nodiscard]] inline T &operator[](size_type index) noexcept {
+    std::size_t rows = _shape[0];
+    return (*_node.get())[index + _index * rows];
   }
 
   /// Asignment from a dynamic expression
   template <class ExprType>
-    requires((::ten::is_unary_expr<std::remove_cvref_t<ExprType>>::value ||
-              ::ten::is_binary_expr<std::remove_cvref_t<ExprType>>::value) &&
-             std::remove_cvref_t<ExprType>::output_type::is_dynamic())
-  ranked_column &operator=(ExprType &&expr) noexcept {
+    requires(is_unary_expr_v<std::remove_cvref_t<ExprType>> ||
+             is_binary_expr_v<std::remove_cvref_t<ExprType>>)
+  column &operator=(ExprType &&expr) noexcept {
     using expr_type = std::remove_cvref_t<ExprType>;
     using evaluated_type = typename expr_type::output_type;
 
-    static_assert(::ten::is_tensor<evaluated_type>::value,
+    static_assert(is_tensor_v<evaluated_type> || is_scalar_v<evaluated_type>,
                   "Evaluated type must be a tensor.");
     auto value = expr.eval();
     // Copy the data
-    size_t rows = _shape.value().dim(0);
-    for (size_t idx = 0; idx < rows; idx++) {
-      (*_node.get())[idx + _index * rows] = value[idx];
+    std::size_t rows = _shape[0];
+    if constexpr (is_tensor_v<evaluated_type>) {
+      for (std::size_t idx = 0; idx < rows; idx++) {
+        (*_node.get())[idx + _index * rows] = value[idx];
+      }
+    }
+    if constexpr (is_scalar_v<evaluated_type>) {
+      for (std::size_t idx = 0; idx < rows; idx++) {
+        (*_node.get())[idx + _index * rows] = value.value();
+      }
     }
     return *this;
   }
 
-  // Asignement from a static vector
-  template <StaticVector V> ranked_column &operator=(V &&value) noexcept {
-    size_t rows = _shape.value().dim(0);
-    for (size_t idx = 0; idx < rows; idx++) {
-      (*_node.get())[idx + _index * rows] = value[idx];
-    }
-    return *this;
-  }
-
-  // Asgnement from a dynamic vector
-  template <DynamicVector V> ranked_column &operator=(V &&value) noexcept {
-    size_t rows = _shape.value().dim(0);
-    for (size_t idx = 0; idx < rows; idx++) {
+  // Assignment from a dynamic vector
+  template <Tensor V> column &operator=(V &&value) noexcept {
+    std::size_t rows = _shape[0];
+    for (std::size_t idx = 0; idx < rows; idx++) {
       (*_node.get())[idx + _index * rows] = value[idx];
     }
     return *this;
   }
 
   // Assign from a value of type T
-  ranked_column &operator=(T value) noexcept {
-    size_t rows = _shape.value().dim(0);
-    for (size_t idx = 0; idx < rows; idx++) {
+  column &operator=(T value) noexcept {
+    std::size_t rows = _shape[0];
+    for (std::size_t idx = 0; idx < rows; idx++) {
       (*_node.get())[idx + _index * rows] = value;
     }
     return *this;
   }
 
   // Convert a column to a vector
+  // Copy the data into a new vector
   auto vector() {
-    size_t rows = _shape.value().dim(0);
-    ten::vector<T, Order, Storage, Allocator> v({rows});
-    for (size_t idx = 0; idx < rows; idx++) {
+    std::size_t rows = _shape[0];
+    tensor<T> v({rows});
+    for (std::size_t idx = 0; idx < rows; idx++) {
       v[idx] = (*_node.get())[idx + _index * rows];
     }
     return v;
   }
-
-  // Convert a column to a static vector
-  auto svector() {
-    constexpr size_t rows = Shape::template static_dim<0>();
-    ten::svector<T, rows, Order> v;
-    for (size_t idx = 0; idx < rows; idx++) {
-      v[idx] = (*_node.get())[idx + _index * rows];
-    }
-    return v;
-  }
-};*/
+};
 
 ////////////////////////////////////////////////////////////////////////////////
-// TODO Rows
-/*
-template <class T>
-class row final
-    : public ten::expr,public ::ten::tensor_base {
-
+// Rows
+template <class T> class row final : public expr, public tensor_base {
 public:
   /// \typedef base_type
   /// Type of the tensor operations.
@@ -2678,61 +2605,55 @@ public:
 
 private:
   size_t _index = 0;
-   std::vector<std::size_t> _shape = {};
+  std::vector<std::size_t> _shape = {};
   std::shared_ptr<node_type> _node = nullptr;
 
 public:
-  /// Constructors for dynmaic ranked_row
-  ranked_row(const size_t index, const Shape &shape,
-             const std::shared_ptr<node_type> &node) noexcept
-    requires(Shape::is_dynamic())
+  /// Constructor
+  row(const size_t index, const std::vector<std::size_t> &shape,
+      const std::shared_ptr<node_type> &node) noexcept
       : _index(index), _shape(shape), _node(node) {}
 
-  /// Constructor for static ranked_row
-  ranked_row(const size_t index,
-             const std::shared_ptr<node_type> &node) noexcept
-    requires(Shape::is_static())
-      : _index(index), _shape(std::nullopt), _node(node) {}
-
   /// Copy constructor
-  // ranked_row(const ranked_row &t) { _node = t._node; }
+  row(const row &t) = default;
   /// Move constructor
-  // ranked_row(ranked_row &&t) { _node = std::move(t._node); }
+  row(row &&t) = default;
 
   /// Assignment operator
-  ranked_row &operator=(const ranked_row &t) {
-     _node = t._node;
-     return *this;
+  row &operator=(const row &t) {
+    _index = t._index;
+    _shape = t._shape;
+    _node = t._node;
+    return *this;
   }
   /// Assignment operator
-  ranked_row &operator=(ranked_row &&t) {
-     _node = std::move(t._node);
-     return *this;
+  row &operator=(row &&t) {
+    _index = std::move(t._index);
+    _shape = std::move(t._shape);
+    _node = std::move(t._node);
+    return *this;
   }
 
   /// Returns the shape
-  /// TODO Requires for only dynamic shape row
-  [[nodiscard]] inline const Shape &shape() const { return _shape.value(); }
+  [[nodiscard]] inline const std::vector<std::size_t> &shape() const {
+    return _shape;
+  }
 
   /// Returns the strides
+  /*
   [[nodiscard]] inline const typename base_type::stride_type &strides() const {
      return _node.get()->strides();
-  }
+  }*/
 
   /// Returns the dynamic size
   [[nodiscard]] inline size_type size() const {
     // The size if the number of cols
-    if constexpr (Shape::is_dynamic()) {
-      return _shape.value().dim(1);
-    }
-    if constexpr (Shape::is_static()) {
-      return Shape::template static_dim<1>();
-    }
+    return _shape[1];
   }
 
   /// Returns the index'th dynamic dimension
-  [[nodiscard]] inline size_type dim(size_type index) const {
-    return _shape.value().dim(index);
+  [[nodiscard]] inline std::size_t dim(std::size_t index) const {
+    return _shape[index];
   }
 
   // Returns the shared ptr to the node
@@ -2745,107 +2666,65 @@ public:
   [[nodiscard]] T *data() { return _node.get()->data() + _index; }
 
   /// Returns the shared ptr to the storage
+  /*
   [[nodiscard]] std::shared_ptr<Storage> storage() const {
     return _node.get()->storage();
+  }*/
+
+  /// Overloading the [] operator
+  [[nodiscard]] inline const T &operator[](size_type index) const noexcept {
+    std::size_t rows = _shape[0];
+    return (*_node.get())[_index + index * rows];
   }
 
   /// Overloading the [] operator
-  [[nodiscard]] inline const typename base_type::value_type &
-  operator[](size_type index) const noexcept {
-    if constexpr (Shape::is_dynamic()) {
-      size_t rows = this->shape().dim(0);
-      return (*_node.get())[_index + index * rows];
-    }
-    if constexpr (Shape::is_static()) {
-      constexpr size_t rows = Shape::template static_dim<0>();
-      return (*_node.get())[_index + index * rows];
-    }
-  }
-
-  /// Overloading the [] operator
-  [[nodiscard]] inline typename base_type::value_type &
-  operator[](size_type index) noexcept {
-    if constexpr (Shape::is_dynamic()) {
-      size_t rows = this->shape().dim(0);
-      return (*_node.get())[_index + index * rows];
-    }
-    if constexpr (Shape::is_static()) {
-      size_t rows = Shape::template static_dim<0>();
-      return (*_node.get())[_index + index * rows];
-    }
-  }
-
-  /// Asignment from a static expression
-  template <class ExprType>
-    requires((::ten::is_unary_expr<std::remove_cvref_t<ExprType>>::value ||
-              ::ten::is_binary_expr<std::remove_cvref_t<ExprType>>::value) &&
-             std::remove_cvref_t<ExprType>::output_type::is_static())
-  ranked_row &operator=(ExprType &&expr) noexcept {
-    using expr_type = std::remove_cvref_t<ExprType>;
-    using evaluated_type = typename expr_type::output_type;
-
-    static_assert(::ten::is_tensor<evaluated_type>::value,
-                  "Error: Evaluated type must be a tensor.");
-
-    auto value = expr.eval();
-
-    // FIXME maybe static_assert(Shape::template  ==
-    // evaluated_type::static_size(),
-    //               "Expected equal shape size.");
-    size_t rows = _shape.value().dim(0);
-    size_t cols = _shape.value().dim(1);
-    for (size_t idx = 0; idx < cols; idx++) {
-      (*_node.get())[_index + idx * rows] = value[idx];
-    }
-    return *this;
+  [[nodiscard]] inline T &operator[](size_type index) noexcept {
+    std::size_t rows = _shape[0];
+    return (*_node.get())[_index + index * rows];
   }
 
   /// Asignment from a dynamic expression
   template <class ExprType>
-    requires((::ten::is_unary_expr<std::remove_cvref_t<ExprType>>::value ||
-              ::ten::is_binary_expr<std::remove_cvref_t<ExprType>>::value) &&
-             std::remove_cvref_t<ExprType>::output_type::is_dynamic())
-  ranked_row &operator=(ExprType &&expr) noexcept {
+    requires(is_unary_expr_v<std::remove_cvref_t<ExprType>> ||
+             is_binary_expr_v<std::remove_cvref_t<ExprType>>)
+  row &operator=(ExprType &&expr) noexcept {
     using expr_type = std::remove_cvref_t<ExprType>;
     using evaluated_type = typename expr_type::output_type;
 
-    static_assert(::ten::is_tensor<evaluated_type>::value,
+    static_assert(is_tensor_v<evaluated_type> || is_scalar_v<evaluated_type>,
                   "Evaluated type must be a tensor.");
     auto value = expr.eval();
     // Copy the data
-    size_t rows = _shape.value().dim(0);
-    size_t cols = _shape.value().dim(1);
-    for (size_t idx = 0; idx < cols; idx++) {
-      (*_node.get())[_index + idx * rows] = value[idx];
+    std::size_t rows = _shape[0];
+    std::size_t cols = _shape[1];
+    if constexpr (is_tensor_v<evaluated_type>) {
+      for (std::size_t idx = 0; idx < cols; idx++) {
+        (*_node.get())[_index + idx * rows] = value[idx];
+      }
     }
-    return *this;
-  }
-
-  // Asignement from a static vector
-  template <StaticVector V> ranked_row &operator=(V &&value) noexcept {
-    size_t rows = _shape.value().dim(0);
-    size_t cols = _shape.value().dim(1);
-    for (size_t idx = 0; idx < cols; idx++) {
-      (*_node.get())[_index + idx * rows] = value[idx];
+    if constexpr (is_scalar_v<evaluated_type>) {
+      for (std::size_t idx = 0; idx < cols; idx++) {
+        (*_node.get())[_index + idx * rows] = value.value();
+      }
     }
     return *this;
   }
 
   // Assignement from a dynamic vector
-  template <DynamicVector V> ranked_row &operator=(V &&value) noexcept {
-    size_t rows = _shape.value().dim(0);
-    size_t cols = _shape.value().dim(1);
-    for (size_t idx = 0; idx < cols; idx++) {
+  template <Tensor V> row &operator=(V &&value) noexcept {
+    std::size_t rows = _shape[0];
+    std::size_t cols = _shape[1];
+    for (std::size_t idx = 0; idx < cols; idx++) {
       (*_node.get())[_index + idx * rows] = value[idx];
     }
     return *this;
   }
 
   // Assign a value of type T
-  ranked_row &operator=(T value) noexcept {
-    size_t rows = _shape.value().dim(0);
-    size_t cols = _shape.value().dim(1);
-    for (size_t idx = 0; idx < cols; idx++) {
+  row &operator=(T value) noexcept {
+    std::size_t rows = _shape[0];
+    std::size_t cols = _shape[1];
+    for (std::size_t idx = 0; idx < cols; idx++) {
       (*_node.get())[_index + idx * rows] = value;
     }
     return *this;
@@ -2853,26 +2732,15 @@ public:
 
   // Convert a row to a vector
   auto vector() {
-    size_t rows = _shape.value().dim(0);
-    size_t cols = _shape.value().dim(1);
-    ten::vector<T, Order, Storage, Allocator> v({cols});
-    for (size_t idx = 0; idx < cols; idx++) {
+    std::size_t rows = _shape[0];
+    std::size_t cols = _shape[1];
+    tensor<T> v({cols});
+    for (std::size_t idx = 0; idx < cols; idx++) {
       v[idx] = (*_node.get())[_index + idx * rows];
     }
     return v;
   }
-
-  // TODO Convert a row to a static vector
-  auto svector() {
-    constexpr size_t rows = Shape::template static_dim<0>();
-    constexpr size_t cols = Shape::template static_dim<1>();
-    ten::svector<T, cols, Order> v;
-    for (size_t idx = 0; idx < cols; idx++) {
-      v[idx] = (*_node.get())[_index + idx * rows];
-    }
-    return v;
-  }
-};*/
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Basic functions

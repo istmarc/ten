@@ -1526,7 +1526,9 @@ struct mul<X, Y, Z> : ::ten::functional::func {
       }
     } else if (xrank == 2 && yrank == 2) {
       // Matrix - matrix multiplication
-      if (x->dim(1) != y->dim(0)) {
+      std::size_t xdim = x->is_transposed() ? x->dim(0) : x->dim(1);
+      std::size_t ydim = y->is_transposed() ? y->dim(1) : y->dim(0);
+      if (xdim != ydim) {
         ::std::cerr
             << "ten::functional::mul - incompatibles input matrices shapes.\n";
       } else if (!x->is_dense() || !y->is_dense()) {
@@ -1535,7 +1537,9 @@ struct mul<X, Y, Z> : ::ten::functional::func {
         ::std::cerr << "ten::functional::mul, different storage order.\n";
       } else {
         if (!z) {
-          ::std::initializer_list<size_type> &&dims = {x->dim(0), y->dim(1)};
+          std::size_t zdim0 = x->is_transposed()? x->dim(1) : x->dim(0);
+          std::size_t zdim1 = y->is_transposed()? y->dim(0) : y->dim(1);
+          ::std::initializer_list<size_type> &&dims = {zdim0, zdim1};
           z = ::std::make_shared<Z>(
               ::std::move(dims), ten::storage_format::dense,
               x->requires_grad() || y->requires_grad(), x->storage_order());
@@ -1544,7 +1548,8 @@ struct mul<X, Y, Z> : ::ten::functional::func {
       }
     } else if (xrank == 2 && yrank == 1) {
       // Matrix - vector multiplication
-      if (x->dim(1) != y->size()) {
+      std::size_t xdim = x->is_transposed()? x->dim(0) : x->dim(1);
+      if (xdim != y->size()) {
         ::std::cerr << "ten::functional::mul matrix vector incompatible input "
                        "shapes\n";
       } else if (!x->is_dense() || !y->is_dense()) {
