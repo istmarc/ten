@@ -87,61 +87,48 @@ std::ostream &operator<<(std::ostream &os, const diagonal<T> &t) {
   return os;
 }
 
-/// TODO Overload << operator for column
-/*
-template <class T, class Shape, storage_order order, class Storage,
-          class Allocator>
-   requires(::ten::is_dynamic_column<
-            ranked_column<T, Shape, order, Storage, Allocator>>::value)
-std::ostream &
-operator<<(std::ostream &os,
-           const ranked_column<T, Shape, order, Storage, Allocator> &t) {
-   os << "column<" << ::ten::to_string<T>() << "," << t.size() << ">";
-   size_type size = t.size();
-   if (size <= 10) {
-      for (size_type i = 0; i < t.size(); i++) {
-         os << "\n" << t[i];
-      }
-   } else {
-      for (size_type i = 0; i < 5; i++) {
-         os << "\n" << t[i];
-      }
-      os << "\n⋮";
-      for (size_type i = t.size() - 5; i < t.size(); i++) {
-         os << "\n" << t[i];
-      }
-   }
-   return os;
-}*/
+/// Overload << operator for column
+template <class T>
+std::ostream &operator<<(std::ostream &os, const column<T> &t) {
+  os << "column<" << ::ten::to_string<T>() << "," << t.size() << ">";
+  size_type size = t.size();
+  if (size <= 10) {
+    for (size_type i = 0; i < t.size(); i++) {
+      os << "\n" << t[i];
+    }
+  } else {
+    for (size_type i = 0; i < 5; i++) {
+      os << "\n" << t[i];
+    }
+    os << "\n⋮";
+    for (size_type i = t.size() - 5; i < t.size(); i++) {
+      os << "\n" << t[i];
+    }
+  }
+  return os;
+}
 
-/// TODO Overload << operator for row
-/*
-template <class T, class Shape, storage_order order, class Storage,
-          class Allocator>
-   requires(::ten::is_dynamic_row<
-            ranked_row<T, Shape, order, Storage, Allocator>>::value)
-std::ostream &
-operator<<(std::ostream &os,
-           const ranked_row<T, Shape, order, Storage, Allocator> &t) {
-   os << "row<" << ::ten::to_string<T>() << "," << t.size() << ">\n";
-   size_type size = t.size();
-   if (size <= 10) {
-      os << t[0];
-      for (size_type i = 1; i < t.size(); i++) {
-         os << " " << t[i];
-      }
-   } else {
-      os << t[0];
-      for (size_type i = 0; i < 5; i++) {
-         os << " " << t[i];
-      }
-      os << "\n...";
-      for (size_type i = t.size() - 5; i < t.size(); i++) {
-         os << " " << t[i];
-      }
-   }
-   return os;
-}*/
+/// Overload << operator for row
+template <class T> std::ostream &operator<<(std::ostream &os, const row<T> &t) {
+  os << "row<" << ::ten::to_string<T>() << "," << t.size() << ">\n";
+  size_type size = t.size();
+  if (size <= 10) {
+    os << t[0];
+    for (size_type i = 1; i < t.size(); i++) {
+      os << " " << t[i];
+    }
+  } else {
+    os << t[0];
+    for (size_type i = 0; i < 5; i++) {
+      os << " " << t[i];
+    }
+    os << "\n...";
+    for (size_type i = t.size() - 5; i < t.size(); i++) {
+      os << " " << t[i];
+    }
+  }
+  return os;
+}
 
 } // namespace ten
 #endif
