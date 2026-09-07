@@ -1749,7 +1749,7 @@ public:
   }
 
   // Data type
-  [[nodiscard]] inline ten::data_type data_type() noexcept {
+  [[nodiscard]] inline ten::data_type data_type() const noexcept {
     return to_data_type<T>();
   }
 
@@ -1893,7 +1893,8 @@ private:
     if constexpr (tail_size == 0) {
       return (*_node.get())[index];
     }
-    std::vector<std::size_t> indices = {index, static_cast<std::size_t>(tail)...};
+    std::vector<std::size_t> indices = {index,
+                                        static_cast<std::size_t>(tail)...};
     std::size_t idx = details::linear_index(_stride, indices);
     return (*_node.get())[idx];
   }
@@ -2480,6 +2481,11 @@ public:
     return *this;
   }
 
+  /// Data type
+  [[nodiscard]] inline ten::data_type data_type() const noexcept {
+    return to_data_type<T>();
+  }
+
   /// Returns the shape
   [[nodiscard]] inline const std::vector<std::size_t> &shape() const {
     return _shape;
@@ -2632,6 +2638,11 @@ public:
     _shape = std::move(t._shape);
     _node = std::move(t._node);
     return *this;
+  }
+
+  /// Data type
+  [[nodiscard]] inline ten::data_type data_type() const noexcept {
+    return to_data_type<T>();
   }
 
   /// Returns the shape

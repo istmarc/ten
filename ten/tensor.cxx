@@ -21,7 +21,7 @@
 
 namespace py = pybind11;
 
-// vector, matrix and tensor
+// Tensor
 using tensor_float = ten::tensor<float>;
 using tensor_double = ten::tensor<double>;
 using tensor_int32 = ten::tensor<int32_t>;
@@ -32,6 +32,7 @@ using tensor_bool = ten::tensor<bool>;
 using tensor_c = ten::tensor<std::complex<float>>;
 using tensor_z = ten::tensor<std::complex<double>>;
 
+// Diagonal
 using diagonal_float = ten::diagonal<float>;
 using diagonal_double = ten::diagonal<double>;
 using diagonal_int32 = ten::diagonal<int32_t>;
@@ -47,6 +48,14 @@ using scalar_int32 = ten::scalar<int32_t>;
 using scalar_int64 = ten::scalar<int64_t>;
 using scalar_uint32 = ten::scalar<uint32_t>;
 using scalar_uint64 = ten::scalar<uint64_t>;
+
+// Column
+using column_float = ten::column<float>;
+using column_double = ten::column<double>;
+
+// Row
+using row_float = ten::row<float>;
+using row_double = ten::row<double>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Unary expr functions
@@ -600,6 +609,64 @@ PYBIND11_MODULE(tencore, m) {
   // Transform diagonal to dense
   m.def("dense_float", &ten::dense<diagonal_float>);
   m.def("dense_double", &ten::dense<diagonal_double>);
+
+  // Column
+  py::class_<column_float>(m, "column_float")
+      .def("data_type", &column_float::data_type)
+      .def("size", &column_float::size)
+      .def("shape", &column_float::shape)
+      .def("__getitem__",
+           [](const column_float &t, std::size_t index) { return t[index]; })
+      .def("__setitem__", [](column_float &t, std::size_t index,
+                             float value) { t[index] = value; })
+      .def("__repr__", [](const column_float &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
+
+  py::class_<column_double>(m, "column_double")
+      .def("data_type", &column_double::data_type)
+      .def("size", &column_double::size)
+      .def("shape", &column_double::shape)
+      .def("__getitem__",
+           [](const column_double &t, std::size_t index) { return t[index]; })
+      .def("__setitem__", [](column_double &t, std::size_t index,
+                             double value) { t[index] = value; })
+      .def("__repr__", [](const column_double &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
+
+  // Row
+  py::class_<row_float>(m, "row_float")
+      .def("data_type", &row_float::data_type)
+      .def("size", &row_float::size)
+      .def("shape", &row_float::shape)
+      .def("__getitem__",
+           [](const row_float &t, std::size_t index) { return t[index]; })
+      .def("__setitem__", [](row_float &t, std::size_t index,
+                             float value) { t[index] = value; })
+      .def("__repr__", [](const row_float &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
+
+  py::class_<row_double>(m, "row_double")
+      .def("data_type", &row_double::data_type)
+      .def("size", &row_double::size)
+      .def("shape", &row_double::shape)
+      .def("__getitem__",
+           [](const row_double &t, std::size_t index) { return t[index]; })
+      .def("__setitem__", [](row_double &t, std::size_t index,
+                             double value) { t[index] = value; })
+      .def("__repr__", [](const row_double &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
 
   /*
   // Transposed, symmetric, lower_tr and upper_tr
