@@ -9,9 +9,5 @@
 #include <ten/kernels/host>
 // Implementation
 #include <ten/tensor.hxx>
-// Distributions
-#include <ten/distributions.hxx>
-// TODO Random numbers generation from distributions
-// #include <ten/random.hxx>
 
 #endif

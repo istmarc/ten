@@ -65,52 +65,66 @@ An expression API class for representing unary and binary operations between ten
 - Tensors
 
 ```c++
-// Uninitialized tensors
-ten::tensor<float> x({2, 3, 4});
-// Assign and access indices
-x(0, 1, 2) = 3.0f;
-std::cout << x(0, 1, 2) << std::endl;
-// Access linear indices
-x[20] = 1.0f;
+#include <ten/tensor>
+
+int main() {
+    // Uninitialized tensors
+    ten::tensor<float> x({2, 3, 4});
+    // Assign and access indices
+    x(0, 1, 2) = 3.0f;
+    std::cout << x(0, 1, 2) << std::endl;
+    // Access linear indices
+    x[20] = 1.0f;
+}
 ```
 
 - Default float tensors
 
 ```c++
-// Uninitialized float32 tensor
-constexpr std::size_t n = 3;
-ten::tensor x({n, n});
-// Initialize
-auto zeros = ten::zeros({n, n})
-auto ones = ten::ones({n, n});
-auto fill = ten::fill({n, n}, .5);
-auto lin = ten::linear({n, n}, 0., 1.);
-// Random
-auto norm = ten::rand_norm({n, n});
-auto unif = ten::rand_unif({n, n});
+#include <ten/tensor>
+#include <ten/random>
+
+int main() {
+    // Uninitialized float32 tensor
+    constexpr std::size_t n = 3;
+    ten::tensor x({n, n});
+    // Initialize
+    auto zeros = ten::zeros({n, n})
+    auto ones = ten::ones({n, n});
+    auto fill = ten::fill({n, n}, .5);
+    auto lin = ten::linear({n, n}, 0., 1.);
+    // Random
+    auto norm = ten::rand_norm({n, n});
+    auto unif = ten::rand_unif({n, n});
+}
 ```
 
 - Slicing, assignment, rows and columns
 
 ```c++
-ten::tensor<float> x({3, 3});
-// Assign a single value
-x = 1.0f;
-// Row and columns can be accessed using col and row
-x.row(0) = 2.0f;
-x.col(0) = 3.0f;
-std::cout << x << std::endl;
-// Slicing using sequences
-using ten::seq;
-using ten::last;
-auto slice = x(seq(1, last), seq(1, 2));
-slice = .3f;
-std::cout << x << std::endl;
-// Slicing using multidimensional sequences ten::mdseq
-using ten::mdseq;
-auto index = mdseq(seq(0, last), seq(0));
-auto second_slice = x[index];
-second_slice = .5f;
+#include <ten/tensor>
+#include <ten/io>
+
+int main() {
+    ten::tensor<float> x({3, 3});
+    // Assign a single value
+    x = 1.0f;
+    // Row and columns can be accessed using col and row
+    x.row(0) = 2.0f;
+    x.col(0) = 3.0f;
+    std::cout << x << std::endl;
+    // Slicing using sequences
+    using ten::seq;
+    using ten::last;
+    auto slice = x(seq(1, last), seq(1, 2));
+    slice = .3f;
+    std::cout << x << std::endl;
+    // Slicing using multidimensional sequences ten::mdseq
+    using ten::mdseq;
+    auto index = mdseq(seq(0, last), seq(0));
+    auto second_slice = x[index];
+    second_slice = .5f;
+}
 ```
 
 - Gemm with expressions matching
