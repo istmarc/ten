@@ -3,3 +3,6 @@ build-bindings/
 build-examples/
 build-tests/
 build-docs/
+*.swp
+*a.out
+
