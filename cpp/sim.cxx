@@ -11,6 +11,6 @@ std::function<float(float)> Finv = [](float y) {
 };
 
 int main() {
-   auto x = ten::inv_sample(Finv, 1000);
+   auto x = ten::inv_sample<float>(1000, Finv);
    std::cout << x << std::endl;
 }
