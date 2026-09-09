@@ -517,6 +517,8 @@ PYBIND11_MODULE(tencore, m) {
       .def("is_diagonal", &tensor_float::is_diagonal)
       .def("is_lower_tr", &tensor_float::is_lower_tr)
       .def("is_upper_tr", &tensor_float::is_upper_tr)
+      .def("col", &tensor_float::col)
+      .def("row", &tensor_float::row)
       .def("__repr__", [](const tensor_float &t) {
         std::stringstream ss;
         ss << t;
@@ -548,6 +550,8 @@ PYBIND11_MODULE(tencore, m) {
       .def("is_diagonal", &tensor_double::is_diagonal)
       .def("is_lower_tr", &tensor_double::is_lower_tr)
       .def("is_upper_tr", &tensor_double::is_upper_tr)
+      .def("col", &tensor_double::col)
+      .def("row", &tensor_double::row)
       .def("__repr__", [](const tensor_double &t) {
         std::stringstream ss;
         ss << t;
