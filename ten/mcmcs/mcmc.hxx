@@ -37,7 +37,7 @@ ten::tensor<T> mcmc(T xt, std::size_t n, F f, G g, std::size_t burn = 0) {
   }
 
   std::size_t k = 0;
-  for (std::size_t i = 0; i < n; i++) {
+  while (k < n) {
     x = mcmc_step(xt, f, g, dist);
     if (xt != x) {
       sample[k] = x;
@@ -46,15 +46,7 @@ ten::tensor<T> mcmc(T xt, std::size_t n, F f, G g, std::size_t burn = 0) {
     }
   }
 
-  if (k == n) {
-    return sample;
-  } else {
-    ten::tensor<T> new_sample({k});
-    for (std::size_t i = 0; i < k; i++) {
-      new_sample[i] = sample[i];
-    }
-    return new_sample;
-  }
+  return sample;
 }
 
 /// Markov Chain Monte Carlo without specifying g
