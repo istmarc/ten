@@ -4,7 +4,7 @@ ten is a header only C++23 dynamic tensor library designed for high performance 
 
 ## Tensor classes
 
-The library is build around a core tensor class `tensor<T>` that provide efficient storage (column major and row major) and manipulation of multidimensional arrays through operator overloading. Operations are implemented using techniques such as SIMD instructions and cache friendly memory access. Error handling is minimized, instead of throwing exceptions, the library relies on the user to validate inputs and manage potential issues. Other classes such as `sparse_tensor<T>`, `diagonal<T>`, `view<T>`, `col<T>`, and `row<T>` are planned.
+The library is build around a core tensor class `tensor<T>` that provide efficient storage (column major and row major) and manipulation of multidimensional arrays through operator overloading. Operations are implemented using techniques such as SIMD instructions and cache friendly memory access. Error handling is minimized, instead of throwing exceptions, the library relies on the user to validate inputs and manage potential issues. Other classes such as `sparse_tensor<T>`, `diagonal<T>`, `view<T>`, `col<T>`, and `row<T>` are implemented.
 
 ## Expressions API
 
@@ -21,9 +21,10 @@ An expression API class for representing unary and binary operations between ten
 - [x] Generate automatic python bindings ([tenpy](https://github.com/istmarc/tenpy))
 - [x] Tensor views and slicing
 - [x] Sorting
+- [x] Chain expressions
 
 ## Roadmap
-- [] Chain expressions
+
 - [] Automatic differentiation
 - [] Sparse tensors
 - [] Save and load binary data
@@ -36,6 +37,7 @@ An expression API class for representing unary and binary operations between ten
 - [] C++ API documentation
 
 ## Long term
+
 - [] Linear algebra and least squares
 - [] Combinatorics
 - [] Quasi random sequences
