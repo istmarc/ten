@@ -66,10 +66,8 @@ public:
 };
 
 /// Solve Ax=b
-template <Tensor M, Tensor V>
-  requires(std::is_same_v<typename std::remove_cvref_t<M>::value_type,
-                          typename std::remove_cvref_t<V>::value_type>)
-auto solve(M &&A, V &&b, const ls_method method = ls_method::qr)
+template <Tensor T>
+auto solve(T &&A, T &&b, const ls_method method = ls_method::qr)
     -> decltype(auto) {
   if (A.rank() != 2) {
     std::cerr << "ten::linalg::solve, A must be a matrix.\n";
@@ -77,14 +75,28 @@ auto solve(M &&A, V &&b, const ls_method method = ls_method::qr)
   if (b.rank() != 1) {
     std::cerr << "ten::linalg::solve, b must be a vector.\n";
   }
-  using value_type = std::remove_cvref_t<M>::value_type;
+  using value_type = std::remove_cvref_t<T>::value_type;
   ls_options options(method);
   linear_system<value_type> ls(options);
   ls.solve(A, b);
   return ls.solution();
 }
 
-/// TODO Linear least squares
+/// Linear least squares
+/// min_beta ||y - X beta||2
+template <Tensor T>
+auto lsqr(T &&X, T &&y, ls_method method = ls_method::qr) -> decltype(auto) {
+  using value_type = std::remove_cvref_t<T>::value_type;
+  // We wan to find beta such that X beta = y
+  ten::tensor<value_type> beta({X.dim(1)});
+  if (method == ls_method::qr) {
+    auto [q, r] = qr(X);
+    // R beta = QT y, set z = QT y and solve Rbeta = z
+    ten::tensor<value_type> z = ten::transposed(q) * y;
+    backward_subtitution(r, z, beta);
+  }
+  return beta;
+}
 
 /// TODO Nonlinear least squares
 
