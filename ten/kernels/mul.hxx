@@ -17,15 +17,14 @@ template <Tensor A, Tensor B, Tensor C> static void mul(A &&a, B &&b, C &c) {
     using blas::transop;
     using T = typename std::remove_cvref_t<A>::value_type;
     const transop transa = (a.is_transposed() ? transop::trans : transop::no);
-    // mxn if transposed nxm
-    const std::size_t lda = transa == transop::no ? m : n;
+    // mxn and if transposed nxm
     const std::size_t incb = 1;
     const std::size_t incc = 1;
     if (transa == transop::no) {
-      ::ten::kernels::blas::gemv(transa, m, n, T(1.), a.data(), lda, b.data(),
+      ::ten::kernels::blas::gemv(transa, m, n, T(1.), a.data(), m, b.data(),
                                  incb, T(0.), c.data(), incc);
     } else {
-      ::ten::kernels::blas::gemv(transa, n, m, T(1.), a.data(), lda, b.data(),
+      ::ten::kernels::blas::gemv(transa, n, m, T(1.), a.data(), n, b.data(),
                                  incb, T(0.), c.data(), incc);
     }
   } else if (ranka == 2 && rankb == 2 && rankc == 2) {
