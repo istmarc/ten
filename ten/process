@@ -1,0 +1,6 @@
+#ifndef TEN_PROCESS
+#define TEN_PROCESS
+
+#include <ten/processes/random_walk.hxx>
+
+#endif
