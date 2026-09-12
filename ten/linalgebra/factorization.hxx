@@ -43,7 +43,7 @@ public:
     size_t k = n;
     ::ten::kernels::lapack::qr_factq(layout, m, n, k, a.data(), lda,
                                      tau.data());
-    for (size_t i = 0; i < n; i++) {
+    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
         _q(i, j) = a(i, j);
       }

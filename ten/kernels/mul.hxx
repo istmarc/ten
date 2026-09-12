@@ -20,13 +20,8 @@ template <Tensor A, Tensor B, Tensor C> static void mul(A &&a, B &&b, C &c) {
     // mxn and if transposed nxm
     const std::size_t incb = 1;
     const std::size_t incc = 1;
-    if (transa == transop::no) {
-      ::ten::kernels::blas::gemv(transa, m, n, T(1.), a.data(), m, b.data(),
-                                 incb, T(0.), c.data(), incc);
-    } else {
-      ::ten::kernels::blas::gemv(transa, n, m, T(1.), a.data(), n, b.data(),
-                                 incb, T(0.), c.data(), incc);
-    }
+    ::ten::kernels::blas::gemv(transa, m, n, T(1.), a.data(), m, b.data(),
+                              incb, T(0.), c.data(), incc);
   } else if (ranka == 2 && rankb == 2 && rankc == 2) {
     // Multiply two dense matrices
     // [m,k] * [k,n] -> [m, n]
