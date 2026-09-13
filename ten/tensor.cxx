@@ -1,4 +1,5 @@
 #include "tensor.hxx"
+#include "linalgebra/least_squares.hxx"
 #include <cmath>
 
 #include <functional>
@@ -319,16 +320,25 @@ template <typename T> auto py_svd(const ten::tensor<T> &a) {
   return ten::linalg::svd(a);
 }
 
-template <typename T> auto py_lsqr(ten::tensor<T> &A, ten::tensor<T> &b) {
+template <typename T> auto py_ls_qr(ten::tensor<T> &A, ten::tensor<T> &b) {
   return ten::linalg::solve(A, b, ten::linalg::ls_method::qr);
 }
 
-template <typename T> auto py_lslu(ten::tensor<T> &A, ten::tensor<T> &b) {
+template <typename T> auto py_ls_lu(ten::tensor<T> &A, ten::tensor<T> &b) {
   return ten::linalg::solve(A, b, ten::linalg::ls_method::lu);
 }
 
-template <typename T> auto py_lssvd(ten::tensor<T> &A, ten::tensor<T> &b) {
+template <typename T> auto py_ls_svd(ten::tensor<T> &A, ten::tensor<T> &b) {
   return ten::linalg::solve(A, b, ten::linalg::ls_method::svd);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Least squares
+
+template <typename T>
+auto py_lsqr(ten::tensor<T> &X, ten::tensor<T> &y,
+             ten::linalg::ls_method method) {
+  return ten::linalg::lsqr(X, y, method);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -934,14 +944,24 @@ PYBIND11_MODULE(tencore, m) {
   m.def("svd_float", &py_svd<float>);
   m.def("svd_double", &py_svd<double>);
 
+  m.def("ls_qr_float", &py_ls_qr<float>);
+  m.def("ls_qr_double", &py_ls_qr<double>);
+
+  m.def("lslu_float", &py_ls_lu<float>);
+  m.def("ls_lu_double", &py_ls_lu<double>);
+
+  m.def("ls_svd_float", &py_ls_svd<float>);
+  m.def("ls_svd_double", &py_ls_svd<double>);
+
+  // linear system method
+  py::enum_<ten::linalg::ls_method>(m, "ls_method", py::arithmetic())
+      .value("qr", ten::linalg::ls_method::qr)
+      .value("lu", ten::linalg::ls_method::lu)
+      .value("svd", ten::linalg::ls_method::svd);
+
+  // Least squares
   m.def("lsqr_float", &py_lsqr<float>);
   m.def("lsqr_double", &py_lsqr<double>);
-
-  m.def("lslu_float", &py_lslu<float>);
-  m.def("lslu_double", &py_lslu<double>);
-
-  m.def("lssvd_float", &py_lssvd<float>);
-  m.def("lssvd_double", &py_lssvd<double>);
 
   //////////////////////////////////////////////////////////////////////////////
   // Sort
