@@ -39,6 +39,7 @@ An expression API class for representing unary and binary operations between ten
 ## Long term
 
 - [] Linear algebra and least squares
+- [] Stochastic processes
 - [] Combinatorics
 - [] Quasi random sequences
 - [] Tensor broadcasting

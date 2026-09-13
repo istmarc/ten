@@ -2,5 +2,6 @@
 #define TEN_PROCESS
 
 #include <ten/processes/random_walk.hxx>
+#include <ten/processes/brownian_motion.hxx>
 
 #endif
