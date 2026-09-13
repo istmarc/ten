@@ -48,6 +48,22 @@ tensor<T> random_walk(
   return random_walk(n, dist, options);
 }
 
+/// Continuous random walk
+/// s is a random walk
+template<typename T = float>
+tensor<T> continuous_random_walk(const tensor<T>& s, std::size_t t, std::size_t n) {
+  T deltat = t / T(n);
+  tensor<T> x({size_t(t / deltat)});
+  std::size_t i = 0;
+  T ts = 0.;
+  while (ts < t) {
+    x[i] = std::sqrt(deltat) * s[size_t(std::floor(ts / deltat))];
+    ts += deltat;
+    i++;
+  }
+  return x;
+}
+
 } // namespace ten
 
 #endif
