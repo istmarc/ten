@@ -11,6 +11,7 @@
 #include <ten/random>
 #include <ten/sort>
 #include <ten/tensor>
+#include <ten/process>
 
 #include <pybind11/attr.h>
 #include <pybind11/functional.h>
@@ -427,6 +428,15 @@ auto py_mcmc(T xt, std::size_t n, std::function<T(T)> f, std::function<T(T)> g,
 template <typename T>
 auto py_mcmc2(T xt, std::size_t n, std::function<T(T)> f, std::size_t burn) {
   return ten::mcmc(xt, n, f, burn);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Process
+
+template<typename T, typename Prob>
+auto py_random_walk(std::size_t n, T k, Prob prob, T inc) {
+  ten::random_walk_options<T,Prob> options{.k = k, .prob = prob, .inc = inc};
+  return ten::random_walk<T,Prob>(n, options);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -984,6 +994,15 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("mcmc2_float", &py_mcmc2<float>);
   m.def("mcmc2_double", &py_mcmc2<double>);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process
+
+  m.def("random_walk_float_float", &py_random_walk<float, float>);
+  m.def("random_walk_int64_float", &py_random_walk<int64_t, float>);
+
+  m.def("random_walk_double_double", &py_random_walk<double, double>);
+  m.def("random_walk_int64_double", &py_random_walk<int64_t, double>);
 
   /////////////////////////////////////////////////////////////////////////////
   // learning
