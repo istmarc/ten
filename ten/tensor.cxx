@@ -1,5 +1,3 @@
-#include "tensor.hxx"
-#include "linalgebra/least_squares.hxx"
 #include <cmath>
 
 #include <functional>
@@ -947,7 +945,7 @@ PYBIND11_MODULE(tencore, m) {
   m.def("ls_qr_float", &py_ls_qr<float>);
   m.def("ls_qr_double", &py_ls_qr<double>);
 
-  m.def("lslu_float", &py_ls_lu<float>);
+  m.def("ls_lu_float", &py_ls_lu<float>);
   m.def("ls_lu_double", &py_ls_lu<double>);
 
   m.def("ls_svd_float", &py_ls_svd<float>);
