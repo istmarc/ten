@@ -727,7 +727,7 @@ public:
   }
 
   /// Get the size
-  [[nodiscard]] size_type size() const { return _storage.get()->size(); }
+  [[nodiscard]] std::size_t size() const { return _storage.get()->size(); }
 
   /// Get the data
   [[nodiscard]] T *data() { return _storage.get()->data(); }
@@ -1148,6 +1148,9 @@ public:
 
   //// Returns the rank
   [[nodiscard]] inline std::size_t rank() const { return _shape.size(); }
+
+  /// Get the size of the index'th dimension
+  [[nodiscard]] std::size_t size(std::size_t index) const { return _shape[index]; }
 
   /// Get the dimension at index
   [[nodiscard]] std::size_t dim(std::size_t index) const {

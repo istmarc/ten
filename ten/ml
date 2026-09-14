@@ -2,5 +2,6 @@
 #define TEN_ML
 
 #include <ten/learning/histogram.hxx>
+#include <ten/learning/linear_model.hxx>
 
 #endif
