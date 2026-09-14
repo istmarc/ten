@@ -3,5 +3,6 @@
 
 #include <ten/learning/histogram.hxx>
 #include <ten/learning/linear_model.hxx>
+#include <ten/learning/polyreg.hxx>
 
 #endif
