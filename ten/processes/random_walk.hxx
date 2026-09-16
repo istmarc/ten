@@ -78,9 +78,8 @@ tensor<T> random_walk_paths(
 template<typename T = float>
 std::tuple<tensor<T>, tensor<T>> continuous_random_walk(const tensor<T>& s, std::size_t t, std::size_t n) {
   T deltat = t / T(n);
-  std::size_t size = std::size_t(std::floor(t / deltat));
-  tensor<T> x({size});
-  tensor<T> index({size});
+  tensor<T> x({n});
+  tensor<T> index({n});
   std::size_t i = 0;
   T ts = 0.;
   while (ts < t) {
