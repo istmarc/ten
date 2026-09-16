@@ -1,4 +1,4 @@
-#include "processes/brownian_motion.hxx"
+#include "processes/random_walk.hxx"
 #include <cmath>
 
 #include <functional>
@@ -444,6 +444,11 @@ template<typename T, typename Prob>
 auto py_random_walk_paths(std::size_t n, std::size_t t, T k, Prob prob, T inc) {
   ten::random_walk_options<T,Prob> options{.k = k, .prob = prob, .inc = inc};
   return ten::random_walk_paths<T,Prob>(n, t, options);
+}
+
+template<typename T>
+auto py_continuous_random_walk(ten::tensor<T>& s, std::size_t t, std::size_t n) {
+  return ten::continuous_random_walk(s, t, n);
 }
 
 template<typename T>
@@ -1031,6 +1036,9 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("random_walk_paths_double_double", &py_random_walk_paths<double, double>);
   m.def("random_walk_paths_int64_double", &py_random_walk_paths<int64_t, double>);
+
+  m.def("continuous_random_walk_float", &py_continuous_random_walk<float>);
+  m.def("continuous_random_walk_double", &py_continuous_random_walk<double>);
 
   m.def("brownian_motion_float", &py_brownian_motion<float>);
   m.def("brownian_motion_double", &py_brownian_motion<double>);
