@@ -440,6 +440,12 @@ auto py_random_walk(std::size_t n, T k, Prob prob, T inc) {
   return ten::random_walk<T,Prob>(n, options);
 }
 
+template<typename T, typename Prob>
+auto py_random_walk_paths(std::size_t n, std::size_t t, T k, Prob prob, T inc) {
+  ten::random_walk_options<T,Prob> options{.k = k, .prob = prob, .inc = inc};
+  return ten::random_walk_paths<T,Prob>(n, t, options);
+}
+
 template<typename T>
 auto py_brownian_motion(ten::tensor<T>& s, std::size_t t) {
   return ten::brownian_motion(s, t);
@@ -1019,6 +1025,12 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("random_walk_double_double", &py_random_walk<double, double>);
   m.def("random_walk_int64_double", &py_random_walk<int64_t, double>);
+
+  m.def("random_walk_paths_float_float", &py_random_walk_paths<float, float>);
+  m.def("random_walk_paths_int64_float", &py_random_walk_paths<int64_t, float>);
+
+  m.def("random_walk_paths_double_double", &py_random_walk_paths<double, double>);
+  m.def("random_walk_paths_int64_double", &py_random_walk_paths<int64_t, double>);
 
   m.def("brownian_motion_float", &py_brownian_motion<float>);
   m.def("brownian_motion_double", &py_brownian_motion<double>);

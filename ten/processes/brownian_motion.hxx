@@ -33,13 +33,14 @@ tensor<T> brownian_motion(const tensor<T> &s, std::size_t t) {
 }
 
 /// Brownian motion paths
+/// S of shape [n x n]
 template <typename T = float>
 tensor<T> brownian_motion(const tensor<T> &S, std::size_t n, std::size_t t) {
   tensor<T> W({n, t});
   T deltat = 1. / t;
   T sqrtdeltat = std::sqrt(deltat);
   T sqrtn = std::sqrt(n);
-  // S(:, j) is a random walk S(:,j) -> W(j,:)
+  // A column S(:, j) is a random walk S(:,j) -> W(j,:)
   for (std::size_t j = 0; j < n; j++) {
     // Compute brownian motion of S(:, j)
     tensor<T> cums({n});
@@ -47,7 +48,7 @@ tensor<T> brownian_motion(const tensor<T> &S, std::size_t n, std::size_t t) {
     for (std::size_t i = 1; i < n; i++) {
       cums[i] = cums[i - 1] + S(i, j);
     }
-    // Save the brownian motion in W(i,:)
+    // Save the brownian motion in W(j,:)
     T ts = 0.;
     std::size_t i = 0;
     while (std::size_t(std::floor(n * ts)) < n) {
