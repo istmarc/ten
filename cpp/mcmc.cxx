@@ -34,9 +34,7 @@ int main() {
   constexpr std::size_t n = 1000;
   auto s = mcmc<float>(0., n, .5, 1.);
   std::cout << s << std::endl;
-  ten::io::save_mtx(s, "mcmc_sample.mtx");
 
   auto s2 = mcmc2<float>(0., n, .5, 1.);
   std::cout << s2 << std::endl;
-  ten::io::save_mtx(s2, "mcmc_sample2.mtx");
 }
