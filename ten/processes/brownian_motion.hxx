@@ -1,7 +1,7 @@
 #ifndef TEN_PROCESSES_BROWNIAN_MOTION
 #define TEN_PROCESSES_BROWNIAN_MOTION
 
-#include "ten/distributions.hxx"
+#include <ten/distributions.hxx>
 #include <ten/processes/random_walk.hxx>
 #include <ten/tensor>
 
@@ -9,7 +9,8 @@ namespace ten {
 
 /// Brownian motion from a random walk s
 template <typename T = float>
-tensor<T> brownian_motion(const tensor<T> &s, std::size_t t) {
+std::tuple<tensor<T>, tensor<T>> brownian_motion(const tensor<T> &s, std::size_t t) {
+  // s.size() % t must be equal to zero
   T deltat = 1. / t;
   std::size_t n = s.size();
   // Cumulative sum of s
@@ -20,24 +21,31 @@ tensor<T> brownian_motion(const tensor<T> &s, std::size_t t) {
   }
   // Brownian motion of s
   tensor<T> w({t});
+  tensor<T> index({t});
   T ts = 0.;
   std::size_t i = 0;
   T sqrtdeltat = std::sqrt(deltat);
   T sqrtn = std::sqrt(n);
   while (std::size_t(std::floor(n * ts)) < n) {
     w[i] = cums[std::size_t(std::floor(n * ts))] * sqrtdeltat / sqrtn;
+    index[i] = ts;
     ts += deltat;
     i++;
   }
-  return w;
+  return std::make_tuple(index, w);
 }
 
 /// Brownian motion paths
 /// S of shape [n x n]
 template <typename T = float>
-tensor<T> brownian_motion(const tensor<T> &S, std::size_t n, std::size_t t) {
+std::tuple<tensor<T>, tensor<T>> brownian_motion(const tensor<T> &S, std::size_t n, std::size_t t) {
   tensor<T> W({n, t});
   T deltat = 1. / t;
+  tensor<T> index({t});
+  index[0] = 0.;
+  for (std::size_t i = 1; i < t; i++) {
+    index[i] = index[i - 1] + deltat;
+  }
   T sqrtdeltat = std::sqrt(deltat);
   T sqrtn = std::sqrt(n);
   // A column S(:, j) is a random walk S(:,j) -> W(j,:)
@@ -57,12 +65,12 @@ tensor<T> brownian_motion(const tensor<T> &S, std::size_t n, std::size_t t) {
       i++;
     }
   }
-  return W;
+  return std::make_tuple(index, W);
 }
 
 // Brownian motion paths from a random walk
 template <typename T = float>
-tensor<T> brownian_motion(std::size_t n, std::size_t t) {
+std::tuple<tensor<T>, tensor<T>> brownian_motion(std::size_t n, std::size_t t) {
   // Random walk S
   uniform<T> dist;
   random_walk_options<T, T> options;
