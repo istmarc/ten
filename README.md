@@ -25,6 +25,7 @@ An expression API class for representing unary and binary operations between ten
 
 ## Roadmap
 
+- [] Tensor broadcasting
 - [] Automatic differentiation
 - [] Sparse tensors
 - [] Save and load binary data
@@ -42,7 +43,6 @@ An expression API class for representing unary and binary operations between ten
 - [] Stochastic processes
 - [] Combinatorics
 - [] Quasi random sequences
-- [] Tensor broadcasting
 - [] Statistics and hypothesis testing
 - [] Optimization
 - [] Machine learning
@@ -158,59 +158,6 @@ int main() {
 
    std::cout << q << std::endl;
    std::cout << r << std::endl;
-}
-```
-
-- Automatic differentiation
-
-```c++
-#include <ten/tensor>
-#include <ten/io>
-
-int main() {
-   ten::tensor<float> x({5}, {1.0f, 2.0f, 3.0f, 4.0f, 5.0f}, true);
-   ten::tensor<float> y({5}, {1.0f, 2.0f, 3.0f, 4.0f, 5.0f}, true);
-   auto z = x / y;
-   auto t = ten::sum(z);
-   t.eval();
-   t.backward();
-   std::cout << "Output = " << t.value() << std::endl;
-   std::cout << "The gradients\n";
-   std::cout << x.grad() << std::endl;
-   std::cout << y.grad() << std::endl;
-}
-```
-
-- Save and load binary data
-
-```c++
-#include <ten/tensor>
-#include <ten/io>
-
-int main() {
-   auto x = ten::range<float>({3, 4});
-   ten::io::save(x, "matrix.ten");
-   auto y = ten::io::load<ten::tensor<float>>("matrix.ten").value();
-   std::cout << "shape = " << y.shape() << std::endl;
-   std::cout << "stride = " << y.strides() << std::endl;
-   std::cout << "data = \n" << y << std::endl;
-}
-```
-
-- Data frame
-
-```c++
-#include <ten/dataframe>
-
-int main() {
-    auto df = ten::read_csv("path/to/file.csv");
-    std::cout << df << std::endl;
-    // Select by column name
-    std::cout << df[{"x"}] << std::endl;
-    // Select by column index
-    std::cout << df[{0, 1, 4}] << std::endl;
-    // Select by row index and column name
-    std::cout << df.select(ten::seq(0, 2), std::vector<std::string>{"x", "y"}) << std::endl;
 }
 ```
 
