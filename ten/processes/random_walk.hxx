@@ -76,17 +76,20 @@ tensor<T> random_walk_paths(
 /// Continuous random walk
 /// s is a random walk
 template<typename T = float>
-tensor<T> continuous_random_walk(const tensor<T>& s, std::size_t t, std::size_t n) {
+std::tuple<tensor<T>, tensor<T>> continuous_random_walk(const tensor<T>& s, std::size_t t, std::size_t n) {
   T deltat = t / T(n);
-  tensor<T> x({size_t(t / deltat)});
+  std::size_t size = std::size_t(std::floor(t / deltat));
+  tensor<T> x({size});
+  tensor<T> index({size});
   std::size_t i = 0;
   T ts = 0.;
   while (ts < t) {
-    x[i] = std::sqrt(deltat) * s[size_t(std::floor(ts / deltat))];
+    x[i] = std::sqrt(deltat) * s[std::size_t(std::floor(ts / deltat))];
+    index[i] = ts;
     ts += deltat;
     i++;
   }
-  return x;
+  return std::make_tuple(index, x);
 }
 
 } // namespace ten
