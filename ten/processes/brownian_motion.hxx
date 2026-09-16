@@ -24,8 +24,8 @@ tensor<T> brownian_motion(const tensor<T> &s, std::size_t t) {
   std::size_t i = 0;
   T sqrtdeltat = std::sqrt(deltat);
   T sqrtn = std::sqrt(n);
-  while (size_t(std::floor(n * ts)) < n) {
-    w[i] = cums[size_t(std::floor(n * ts))] * sqrtdeltat / sqrtn;
+  while (std::size_t(std::floor(n * ts)) < n) {
+    w[i] = cums[std::size_t(std::floor(n * ts))] * sqrtdeltat / sqrtn;
     ts += deltat;
     i++;
   }
@@ -50,8 +50,8 @@ tensor<T> brownian_motion(const tensor<T> &S, std::size_t n, std::size_t t) {
     // Save the brownian motion in W(i,:)
     T ts = 0.;
     std::size_t i = 0;
-    while (size_t(std::floor(n * ts)) < n) {
-      W(j, i) = cums[size_t(std::floor(n * ts))] * sqrtdeltat / sqrtn;
+    while (std::size_t(std::floor(n * ts)) < n) {
+      W(j, i) = cums[std::size_t(std::floor(n * ts))] * sqrtdeltat / sqrtn;
       ts += deltat;
       i++;
     }

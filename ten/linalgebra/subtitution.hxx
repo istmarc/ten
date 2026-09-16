@@ -5,6 +5,7 @@
 
 namespace ten::linalg {
 
+// L lower triangular
 template <Tensor M, Tensor V>
 void forward_subtitution(const M &L, const V &y, V &x) {
   using T = typename V::value_type;
@@ -19,6 +20,7 @@ void forward_subtitution(const M &L, const V &y, V &x) {
   }
 }
 
+// U upper triangular
 template <Tensor M, Tensor V>
 void backward_subtitution(const M &U, const V &y, V &x) {
   using T = typename V::value_type;

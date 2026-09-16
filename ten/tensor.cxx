@@ -1,3 +1,4 @@
+#include "processes/brownian_motion.hxx"
 #include <cmath>
 
 #include <functional>
@@ -439,6 +440,21 @@ auto py_random_walk(std::size_t n, T k, Prob prob, T inc) {
   return ten::random_walk<T,Prob>(n, options);
 }
 
+template<typename T>
+auto py_brownian_motion(ten::tensor<T>& s, std::size_t t) {
+  return ten::brownian_motion(s, t);
+}
+
+template<typename T>
+auto py_brownian_motion_paths(ten::tensor<T>& s, std::size_t n, std::size_t t) {
+  return ten::brownian_motion(s, n, t);
+}
+
+template<typename T>
+auto py_brownian_motion_all_paths(std::size_t n, std::size_t t) {
+  return ten::brownian_motion(n, t);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Bindings for the core libray
 
@@ -518,7 +534,7 @@ PYBIND11_MODULE(tencore, m) {
   py::class_<tensor_float>(m, "tensor_float")
       .def("make", &py_make_tensor<float>)
       .def("rank", &tensor_float::rank)
-      .def("size", &tensor_float::size)
+      .def("size", [](const tensor_float& t) { return t.size();})
       .def("shape", &tensor_float::shape)
       .def("dim", &tensor_float::dim)
       .def("strides", &tensor_float::strides)
@@ -551,7 +567,7 @@ PYBIND11_MODULE(tencore, m) {
   py::class_<tensor_double>(m, "tensor_double")
       .def("make", &py_make_tensor<double>)
       .def("rank", &tensor_double::rank)
-      .def("size", &tensor_double::size)
+      .def("size", [](const tensor_double& t) { return t.size();})
       .def("shape", &tensor_double::shape)
       .def("dim", &tensor_double::dim)
       .def("strides", &tensor_double::strides)
@@ -1003,6 +1019,15 @@ PYBIND11_MODULE(tencore, m) {
 
   m.def("random_walk_double_double", &py_random_walk<double, double>);
   m.def("random_walk_int64_double", &py_random_walk<int64_t, double>);
+
+  m.def("brownian_motion_float", &py_brownian_motion<float>);
+  m.def("brownian_motion_double", &py_brownian_motion<double>);
+
+  m.def("brownian_motion_paths_float", &py_brownian_motion_paths<float>);
+  m.def("brownian_motion_paths_double", &py_brownian_motion_paths<double>);
+
+  m.def("brownian_motion_all_paths_float", &py_brownian_motion_all_paths<float>);
+  m.def("brownian_motion_all_paths_double", &py_brownian_motion_all_paths<double>);
 
   /////////////////////////////////////////////////////////////////////////////
   // learning
