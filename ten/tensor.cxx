@@ -1,18 +1,19 @@
-#include "processes/random_walk.hxx"
+#include "combinatorics/enumerative.hxx"
 #include <cmath>
 
 #include <functional>
 #include <ten/types.hxx>
 
+#include <ten/cmb>
 #include <ten/io>
 #include <ten/linalg>
 #include <ten/math>
 #include <ten/mcmc>
 #include <ten/ml>
+#include <ten/process>
 #include <ten/random>
 #include <ten/sort>
 #include <ten/tensor>
-#include <ten/process>
 
 #include <pybind11/attr.h>
 #include <pybind11/functional.h>
@@ -434,36 +435,49 @@ auto py_mcmc2(T xt, std::size_t n, std::function<T(T)> f, std::size_t burn) {
 ////////////////////////////////////////////////////////////////////////////////
 // Process
 
-template<typename T, typename Prob>
+template <typename T, typename Prob>
 auto py_random_walk(std::size_t n, T k, Prob prob, T inc) {
-  ten::random_walk_options<T,Prob> options{.k = k, .prob = prob, .inc = inc};
-  return ten::random_walk<T,Prob>(n, options);
+  ten::random_walk_options<T, Prob> options{.k = k, .prob = prob, .inc = inc};
+  return ten::random_walk<T, Prob>(n, options);
 }
 
-template<typename T, typename Prob>
+template <typename T, typename Prob>
 auto py_random_walk_paths(std::size_t n, std::size_t t, T k, Prob prob, T inc) {
-  ten::random_walk_options<T,Prob> options{.k = k, .prob = prob, .inc = inc};
-  return ten::random_walk_paths<T,Prob>(n, t, options);
+  ten::random_walk_options<T, Prob> options{.k = k, .prob = prob, .inc = inc};
+  return ten::random_walk_paths<T, Prob>(n, t, options);
 }
 
-template<typename T>
-auto py_continuous_random_walk(ten::tensor<T>& s, std::size_t t, std::size_t n) {
+template <typename T>
+auto py_continuous_random_walk(ten::tensor<T> &s, std::size_t t,
+                               std::size_t n) {
   return ten::continuous_random_walk(s, t, n);
 }
 
-template<typename T>
-auto py_brownian_motion(ten::tensor<T>& s, std::size_t t) {
+template <typename T>
+auto py_brownian_motion(ten::tensor<T> &s, std::size_t t) {
   return ten::brownian_motion(s, t);
 }
 
-template<typename T>
-auto py_brownian_motion_paths(ten::tensor<T>& s, std::size_t n, std::size_t t) {
+template <typename T>
+auto py_brownian_motion_paths(ten::tensor<T> &s, std::size_t n, std::size_t t) {
   return ten::brownian_motion(s, n, t);
 }
 
-template<typename T>
+template <typename T>
 auto py_brownian_motion_all_paths(std::size_t n, std::size_t t) {
   return ten::brownian_motion(n, t);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Compute linear index
+
+std::size_t py_linear_index(const std::vector<std::size_t> &strides,
+                            const std::vector<std::size_t> &indices) {
+  std::size_t index = 0;
+  for (std::size_t i = 0; i < strides.size(); i++) {
+    index += indices[i] * strides[i];
+  }
+  return index;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -541,11 +555,14 @@ PYBIND11_MODULE(tencore, m) {
       .value("col_major", ten::storage_order::col_major)
       .value("row_major", ten::storage_order::row_major);
 
+  // Linear index from indices and strides
+  m.def("linear_index", &py_linear_index);
+
   // Tensor float
   py::class_<tensor_float>(m, "tensor_float")
       .def("make", &py_make_tensor<float>)
       .def("rank", &tensor_float::rank)
-      .def("size", [](const tensor_float& t) { return t.size();})
+      .def("size", [](const tensor_float &t) { return t.size(); })
       .def("shape", &tensor_float::shape)
       .def("dim", &tensor_float::dim)
       .def("strides", &tensor_float::strides)
@@ -570,15 +587,11 @@ PYBIND11_MODULE(tencore, m) {
         return ss.str();
       });
 
-  // Get and set values from vector
-  m.def("tensor_float_get", &py_get_value<float>);
-  m.def("tensor_float_set", &py_set_value<float>);
-
   // Tensor double
   py::class_<tensor_double>(m, "tensor_double")
       .def("make", &py_make_tensor<double>)
       .def("rank", &tensor_double::rank)
-      .def("size", [](const tensor_double& t) { return t.size();})
+      .def("size", [](const tensor_double &t) { return t.size(); })
       .def("shape", &tensor_double::shape)
       .def("dim", &tensor_double::dim)
       .def("strides", &tensor_double::strides)
@@ -603,9 +616,121 @@ PYBIND11_MODULE(tencore, m) {
         return ss.str();
       });
 
-  // Get and set values from vector
-  m.def("tensor_double_get", &py_get_value<double>);
-  m.def("tensor_double_set", &py_set_value<double>);
+  // Tensor int32
+  py::class_<tensor_int32>(m, "tensor_int32")
+      .def("make", &py_make_tensor<int32_t>)
+      .def("rank", &tensor_int32::rank)
+      .def("size", [](const tensor_int32 &t) { return t.size(); })
+      .def("shape", &tensor_int32::shape)
+      .def("dim", &tensor_int32::dim)
+      .def("strides", &tensor_int32::strides)
+      .def("data_type", &tensor_int32::data_type)
+      .def("format", &tensor_int32::format)
+      .def("storage_order", &tensor_int32::storage_order)
+      .def("__getitem__",
+           [](const tensor_int32 &t, std::size_t index) { return t[index]; })
+      .def("__setitem__", [](tensor_int32 &t, std::size_t index,
+                             int32_t value) { t[index] = value; })
+      .def("is_transposed", &tensor_int32::is_transposed)
+      .def("is_symmetric", &tensor_int32::is_symmetric)
+      .def("is_hermitian", &tensor_int32::is_hermitian)
+      .def("is_diagonal", &tensor_int32::is_diagonal)
+      .def("is_lower_tr", &tensor_int32::is_lower_tr)
+      .def("is_upper_tr", &tensor_int32::is_upper_tr)
+      .def("col", &tensor_int32::col)
+      .def("row", &tensor_int32::row)
+      .def("__repr__", [](const tensor_int32 &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
+
+  // Tensor int64
+  py::class_<tensor_int64>(m, "tensor_int64")
+      .def("make", &py_make_tensor<int64_t>)
+      .def("rank", &tensor_int64::rank)
+      .def("size", [](const tensor_int64 &t) { return t.size(); })
+      .def("shape", &tensor_int64::shape)
+      .def("dim", &tensor_int64::dim)
+      .def("strides", &tensor_int64::strides)
+      .def("data_type", &tensor_int64::data_type)
+      .def("format", &tensor_int64::format)
+      .def("storage_order", &tensor_int64::storage_order)
+      .def("__getitem__",
+           [](const tensor_int64 &t, std::size_t index) { return t[index]; })
+      .def("__setitem__", [](tensor_int64 &t, std::size_t index,
+                             int64_t value) { t[index] = value; })
+      .def("is_transposed", &tensor_int64::is_transposed)
+      .def("is_symmetric", &tensor_int64::is_symmetric)
+      .def("is_hermitian", &tensor_int64::is_hermitian)
+      .def("is_diagonal", &tensor_int64::is_diagonal)
+      .def("is_lower_tr", &tensor_int64::is_lower_tr)
+      .def("is_upper_tr", &tensor_int64::is_upper_tr)
+      .def("col", &tensor_int64::col)
+      .def("row", &tensor_int64::row)
+      .def("__repr__", [](const tensor_int64 &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
+
+  // Tensor uint32
+  py::class_<tensor_uint32>(m, "tensor_uint32")
+      .def("make", &py_make_tensor<uint32_t>)
+      .def("rank", &tensor_uint32::rank)
+      .def("size", [](const tensor_uint32 &t) { return t.size(); })
+      .def("shape", &tensor_uint32::shape)
+      .def("dim", &tensor_uint32::dim)
+      .def("strides", &tensor_uint32::strides)
+      .def("data_type", &tensor_uint32::data_type)
+      .def("format", &tensor_uint32::format)
+      .def("storage_order", &tensor_uint32::storage_order)
+      .def("__getitem__",
+           [](const tensor_uint32 &t, std::size_t index) { return t[index]; })
+      .def("__setitem__", [](tensor_uint32 &t, std::size_t index,
+                             uint32_t value) { t[index] = value; })
+      .def("is_transposed", &tensor_uint32::is_transposed)
+      .def("is_symmetric", &tensor_uint32::is_symmetric)
+      .def("is_hermitian", &tensor_uint32::is_hermitian)
+      .def("is_diagonal", &tensor_uint32::is_diagonal)
+      .def("is_lower_tr", &tensor_uint32::is_lower_tr)
+      .def("is_upper_tr", &tensor_uint32::is_upper_tr)
+      .def("col", &tensor_uint32::col)
+      .def("row", &tensor_uint32::row)
+      .def("__repr__", [](const tensor_uint32 &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
+
+  // Tensor uint64
+  py::class_<tensor_uint64>(m, "tensor_uint64")
+      .def("make", &py_make_tensor<uint64_t>)
+      .def("rank", &tensor_uint64::rank)
+      .def("size", [](const tensor_uint64 &t) { return t.size(); })
+      .def("shape", &tensor_uint64::shape)
+      .def("dim", &tensor_uint64::dim)
+      .def("strides", &tensor_uint64::strides)
+      .def("data_type", &tensor_uint64::data_type)
+      .def("format", &tensor_uint64::format)
+      .def("storage_order", &tensor_uint64::storage_order)
+      .def("__getitem__",
+           [](const tensor_uint64 &t, std::size_t index) { return t[index]; })
+      .def("__setitem__", [](tensor_uint64 &t, std::size_t index,
+                             int64_t value) { t[index] = value; })
+      .def("is_transposed", &tensor_uint64::is_transposed)
+      .def("is_symmetric", &tensor_uint64::is_symmetric)
+      .def("is_hermitian", &tensor_uint64::is_hermitian)
+      .def("is_diagonal", &tensor_uint64::is_diagonal)
+      .def("is_lower_tr", &tensor_uint64::is_lower_tr)
+      .def("is_upper_tr", &tensor_uint64::is_upper_tr)
+      .def("col", &tensor_uint64::col)
+      .def("row", &tensor_uint64::row)
+      .def("__repr__", [](const tensor_uint64 &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
 
   // Initialization functions
   m.def("zeros_float", &py_zeros<float>);
@@ -1034,8 +1159,10 @@ PYBIND11_MODULE(tencore, m) {
   m.def("random_walk_paths_float_float", &py_random_walk_paths<float, float>);
   m.def("random_walk_paths_int64_float", &py_random_walk_paths<int64_t, float>);
 
-  m.def("random_walk_paths_double_double", &py_random_walk_paths<double, double>);
-  m.def("random_walk_paths_int64_double", &py_random_walk_paths<int64_t, double>);
+  m.def("random_walk_paths_double_double",
+        &py_random_walk_paths<double, double>);
+  m.def("random_walk_paths_int64_double",
+        &py_random_walk_paths<int64_t, double>);
 
   m.def("continuous_random_walk_float", &py_continuous_random_walk<float>);
   m.def("continuous_random_walk_double", &py_continuous_random_walk<double>);
@@ -1046,8 +1173,19 @@ PYBIND11_MODULE(tencore, m) {
   m.def("brownian_motion_paths_float", &py_brownian_motion_paths<float>);
   m.def("brownian_motion_paths_double", &py_brownian_motion_paths<double>);
 
-  m.def("brownian_motion_all_paths_float", &py_brownian_motion_all_paths<float>);
-  m.def("brownian_motion_all_paths_double", &py_brownian_motion_all_paths<double>);
+  m.def("brownian_motion_all_paths_float",
+        &py_brownian_motion_all_paths<float>);
+  m.def("brownian_motion_all_paths_double",
+        &py_brownian_motion_all_paths<double>);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Combinatorics
+
+  m.def("factorial_uint64", &ten::factorial<int64_t>);
+  m.def("perm_uint64", &ten::perm<int64_t>);
+  m.def("comb_uint64", &ten::comb<int64_t>);
+  m.def("pascal_triangle_uint64", &ten::pascal_triangle<int64_t>);
+  m.def("nth_pascal_triangle_uint64", &ten::nth_pascal_triangle<int64_t>);
 
   /////////////////////////////////////////////////////////////////////////////
   // learning
