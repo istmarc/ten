@@ -1181,11 +1181,11 @@ PYBIND11_MODULE(tencore, m) {
   /////////////////////////////////////////////////////////////////////////////
   // Combinatorics
 
-  m.def("factorial_uint64", &ten::factorial<int64_t>);
-  m.def("perm_uint64", &ten::perm<int64_t>);
-  m.def("comb_uint64", &ten::comb<int64_t>);
-  m.def("pascal_triangle_uint64", &ten::pascal_triangle<int64_t>);
-  m.def("nth_pascal_triangle_uint64", &ten::nth_pascal_triangle<int64_t>);
+  m.def("factorial_uint64", &ten::factorial<uint64_t>);
+  m.def("perm_uint64", &ten::perm<uint64_t>);
+  m.def("comb_uint64", &ten::comb<uint64_t>);
+  m.def("pascal_triangle_uint64", &ten::pascal_triangle<uint64_t>);
+  m.def("nth_pascal_triangle_uint64", &ten::nth_pascal_triangle<uint64_t>);
 
   /////////////////////////////////////////////////////////////////////////////
   // learning
