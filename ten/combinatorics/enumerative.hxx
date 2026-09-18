@@ -46,7 +46,7 @@ tensor<T> pascal_triangle(std::size_t n) {
   x(0,0) = 1;
   for (std::size_t i = 1; i <= n; i++) {
     x(i,0) = 1;
-    for (std::size_t j = 1; j <= n; j++) {
+    for (std::size_t j = 1; j <= i; j++) {
       x(i,j) = x(i-1, j-1) + x(i-1,j);
     }
   }
@@ -62,11 +62,11 @@ tensor<T> nth_pascal_triangle(std::size_t n) {
   x[0] = 1;
   for (std::size_t i = 1; i <= n; i++) {
     // Compute x
-    for (std::size_t j = 1; j <= n; j++) {
+    for (std::size_t j = 1; j <= i; j++) {
       x[j] = xprev[j-1] + xprev[j];
     }
     // Save x into xprev
-    for (std::size_t j = 1; j <= n; j++) {
+    for (std::size_t j = 1; j <= i; j++) {
       xprev[j] = x[j];
     }
   }
