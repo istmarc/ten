@@ -1,0 +1,6 @@
+#ifndef TEN_CMB
+#define TEN_CMB
+
+#include <ten/combinatorics/enumerative.hxx>
+
+#endif
