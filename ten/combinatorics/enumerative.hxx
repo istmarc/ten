@@ -56,7 +56,7 @@ tensor<T> pascal_triangle(std::size_t n) {
 /// nth line of the pascal triangle
 template<typename T = std::size_t>
 tensor<T> nth_pascal_triangle(std::size_t n) {
-  tensor<T> xprev({n+1});
+  tensor<T> xprev = zeros<T>({n+1});
   xprev[0] = 1;
   tensor<T> x({n+1});
   x[0] = 1;
