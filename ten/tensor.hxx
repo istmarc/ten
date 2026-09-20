@@ -18,6 +18,7 @@
 #include <utility>
 // #include <vector>
 
+#include <ten/sshape.hxx>
 #include <ten/expr.hxx>
 #include <ten/functional.hxx>
 #include <ten/types.hxx>

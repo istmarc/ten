@@ -6,7 +6,7 @@
 
 namespace ten::ml {
 
-enum class lm_method { qr = 1, lu = 2, svd = 3, gd = 4 };
+enum class lm_method { qr = 1, lu = 2, svd = 3, gd = 4};
 
 /// Linear model
 /// Currently fit only linear regression
@@ -48,7 +48,7 @@ public:
     }
   }
 
-  tensor<T> coeff() const { return _beta; }
+  tensor<T> coef() const { return _beta; }
 
   tensor<T> fitted() const { return _yhat; }
 };

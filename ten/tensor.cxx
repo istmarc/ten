@@ -1,4 +1,6 @@
 #include "combinatorics/enumerative.hxx"
+#include "learning/linear_model.hxx"
+#include "learning/polyreg.hxx"
 #include <cmath>
 
 #include <functional>
@@ -359,6 +361,14 @@ template <typename T> void py_sort_inplace(ten::tensor<T> &x) {
 using histogram_options = ten::ml::histogram_options;
 using histogram_float = ten::ml::histogram<float>;
 using histogram_double = ten::ml::histogram<double>;
+
+using lm_method = ten::ml::lm_method;
+
+using linear_model_float = ten::ml::linear_model<float>;
+using linear_model_double = ten::ml::linear_model<double>;
+
+using polyreg_float = ten::ml::polyreg<float>;
+using polyreg_double = ten::ml::polyreg<double>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Create a new tensor
@@ -1202,4 +1212,38 @@ PYBIND11_MODULE(tencore, m) {
       .def(py::init<histogram_options>())
       .def("fit", &histogram_double::fit)
       .def("hist", &histogram_double::hist);
+
+  // linear model method
+  py::enum_<lm_method>(m, "lm_method", py::arithmetic())
+      .value("qr", ten::ml::lm_method::qr)
+      .value("lu", ten::ml::lm_method::lu)
+      .value("svd", ten::ml::lm_method::svd)
+      .value("gd", ten::ml::lm_method::gd);
+
+  // Linear model
+  py::class_<linear_model_float>(m, "linear_model_float")
+    .def(py::init<lm_method>())
+    .def("fit", &linear_model_float::fit)
+    .def("coef", &linear_model_float::coef)
+    .def("fitted", &linear_model_float::fitted);
+
+  py::class_<linear_model_double>(m, "linear_model_double")
+    .def(py::init<lm_method>())
+    .def("fit", &linear_model_double::fit)
+    .def("coef", &linear_model_double::coef)
+    .def("fitted", &linear_model_double::fitted);
+
+  // Polyreg
+  py::class_<polyreg_float>(m, "polyreg_float")
+    .def(py::init<std::size_t>())
+    .def("fit", &polyreg_float::fit)
+    .def("coef", &polyreg_float::coef)
+    .def("fitted", &polyreg_float::fitted);
+
+  py::class_<polyreg_double>(m, "polyreg_double")
+    .def(py::init<std::size_t>())
+    .def("fit", &polyreg_double::fit)
+    .def("coef", &polyreg_double::coef)
+    .def("fitted", &polyreg_double::fitted);
+
 }
