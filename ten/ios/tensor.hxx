@@ -28,21 +28,39 @@ template <class T>
 std::ostream &operator<<(std::ostream &os, const tensor<T> &t) {
   const size_t rank = t.rank();
   if (rank == 1) {
-    os << "tensor<" << ::ten::to_string<T>() << ",";
-    print_shape(os, t.shape());
-    os << ">";
     std::size_t size = t.size();
-    if (size <= 10) {
-      for (std::size_t i = 0; i < t.size(); i++) {
-        os << "\n" << t[i];
+    os << "tensor<" << ::ten::to_string<T>() << ",";
+    os << size;
+    os << ">";
+    if (t.storage_order() == ten::storage_order::col_major) {
+      if (size <= 10) {
+        for (std::size_t i = 0; i < t.size(); i++) {
+          os << "\n" << t[i];
+        }
+      } else {
+        for (std::size_t i = 0; i < 5; i++) {
+          os << "\n" << t[i];
+        }
+        os << "\n⋮";
+        for (std::size_t i = t.size() - 5; i < t.size(); i++) {
+          os << "\n" << t[i];
+        }
       }
-    } else {
-      for (std::size_t i = 0; i < 5; i++) {
-        os << "\n" << t[i];
-      }
-      os << "\n⋮";
-      for (std::size_t i = t.size() - 5; i < t.size(); i++) {
-        os << "\n" << t[i];
+    } else { // row_major
+      if (size <= 10) {
+        os << "\n" << t[0];
+        for (std::size_t i = 1; i < t.size(); i++) {
+          os << " " << t[i];
+        }
+      } else {
+        os << "\n" << t[0];
+        for (std::size_t i = 1; i < 5; i++) {
+          os << " " << t[i];
+        }
+        os << " ...";
+        for (std::size_t i = t.size() - 5; i < t.size(); i++) {
+          os << " " << t[i];
+        }
       }
     }
   } else if (rank == 2) {

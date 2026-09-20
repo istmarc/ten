@@ -878,8 +878,7 @@ public:
   /// Construct a tensor from node, shape, format and storage order
   explicit tensor(const std::shared_ptr<node_type> &node,
                   const std::vector<std::size_t> &dims,
-                  const ::ten::storage_format format,
-                  const bool requires_grad = false,
+                  const storage_format format, const bool requires_grad = false,
                   const ::ten::storage_order order =
                       ::ten::storage_order::col_major) noexcept
       : _requires_grad(requires_grad), _format(format), _order(order),
@@ -1150,7 +1149,9 @@ public:
   [[nodiscard]] inline std::size_t rank() const { return _shape.size(); }
 
   /// Get the size of the index'th dimension
-  [[nodiscard]] std::size_t size(std::size_t index) const { return _shape[index]; }
+  [[nodiscard]] std::size_t size(std::size_t index) const {
+    return _shape[index];
+  }
 
   /// Get the dimension at index
   [[nodiscard]] std::size_t dim(std::size_t index) const {
@@ -1554,12 +1555,18 @@ TensorType deserialize(std::istream &is) {
    return TensorType(std::move(node));
 }*/
 
-// Row major tensor
+/// Create a row major tensor
 template <typename T>
 auto row_major(const std::vector<std::size_t> &dims,
                const bool requires_grad = false) {
   ten::tensor<T> x(dims, requires_grad, ten::storage_order::row_major);
   return x;
+}
+
+/// Access as a row major tensor
+template <typename T> auto row_major(const tensor<T> &t) {
+  return tensor<T>(t.node(), t.shape(), t.format(), t.requires_grad(),
+                   storage_order::row_major);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
