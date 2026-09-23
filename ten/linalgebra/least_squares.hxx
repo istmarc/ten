@@ -2,8 +2,12 @@
 #define TEN_LINALGEBRA_LEAST_SQUARES_HXX
 
 #include <ten/linalgebra/factorization.hxx>
+#include <ten/linalgebra/linalgebra.hxx>
 #include <ten/linalgebra/subtitution.hxx>
+#include <ten/random>
+#include <ten/tensor>
 #include <ten/types.hxx>
+
 #include <type_traits>
 
 namespace ten::linalg {
@@ -98,7 +102,68 @@ auto lsqr(T &&X, T &&y, ls_method method = ls_method::qr) -> decltype(auto) {
   return beta;
 }
 
-/// TODO Nonlinear least squares
+enum class nls_method {
+  gauss_newton = 1,
+  mardquardt = 2,
+  qr = 3,
+  svd = 4,
+  newton = 5
+};
+
+/// Non linear least squares options
+template <class T> struct nls_options {
+  using value_type = T::value_type;
+
+  nls_method method = nls_method::gauss_newton;
+
+  std::size_t n;
+  std::optional<T> beta0 = std::nullopt;
+  std::optional<T> H = std::nullopt;
+  std::optional<T> W = std::nullopt;
+  std::size_t itermax = 1000;
+  value_type eps = 1e-3;
+};
+
+/// Nonlinear least squares
+/// min ||f(x,beta)-y||2
+template <class F, class Jacobian, Tensor T, Tensor R>
+auto nls_newton_gauss(F f, T &&x, T &&y, Jacobian Jr, nls_options<R> options)
+    -> decltype(auto) {
+  using value_type = std::remove_cvref_t<T>::value_type;
+  static_assert(std::is_same_v<value_type, typename R::value_type>,
+                "Tensors must have the same value type.");
+  std::size_t m = x.size();
+  std::size_t n = options.n;
+
+  // Gauss newton algorithm (JtJ)Delta_beta = Jt Delta_y
+  tensor<value_type> beta = options.beta0.has_value()
+                                ? options.beta0.value().copy()
+                                : ten::rand_norm({n});
+  tensor<value_type> beta0 = beta.copy();
+  tensor<value_type> res({m});
+  tensor<value_type> diff({m});
+  for (std::size_t i = 0; i < options.itermax; i++) {
+    // Compute the jacobian
+    tensor<value_type> J = Jr(x, beta);
+    // Compute the residuals
+    res = y - f(x, beta);
+    tensor<value_type> JtJ = ten::transposed(J) * J;
+    tensor<value_type> JtRes = ten::transposed(J) * res;
+    tensor<value_type> delta = ten::linalg::solve(JtJ, JtRes);
+    // Update beta
+    for (std::size_t k = 0; k < m; k++) {
+      beta[k] -= delta[k];
+    }
+    value_type s = .0;
+    for (std::size_t k = 0; k < m; k++) {
+      s += std::abs(delta[k]);
+    }
+    if (std::sqrt(s) < options.eps) {
+      break;
+    }
+  }
+  return beta;
+}
 
 } // namespace ten::linalg
 
