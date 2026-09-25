@@ -1,7 +1,3 @@
-#include "graphs/glist.hxx"
-#include "graphs/gmatrix.hxx"
-#include "graphs/gweighted.hxx"
-#include "graphs/types.hxx"
 #include <cmath>
 
 #include <functional>
@@ -1262,26 +1258,31 @@ PYBIND11_MODULE(tencore, m) {
       .def(py::init<lm_method>())
       .def("fit", &linear_model_float::fit)
       .def("coef", &linear_model_float::coef)
-      .def("fitted", &linear_model_float::fitted);
+      .def("fitted", &linear_model_float::fitted)
+      .def("predict", &linear_model_float::predict);
 
   py::class_<linear_model_double>(m, "linear_model_double")
       .def(py::init<lm_method>())
       .def("fit", &linear_model_double::fit)
       .def("coef", &linear_model_double::coef)
-      .def("fitted", &linear_model_double::fitted);
+      .def("fitted", &linear_model_double::fitted)
+      .def("predict", &linear_model_double::predict);
+
 
   // Polyreg
   py::class_<polyreg_float>(m, "polyreg_float")
       .def(py::init<std::size_t>())
       .def("fit", &polyreg_float::fit)
       .def("coef", &polyreg_float::coef)
-      .def("fitted", &polyreg_float::fitted);
+      .def("fitted", &polyreg_float::fitted)
+      .def("predict", &polyreg_float::predict);
 
   py::class_<polyreg_double>(m, "polyreg_double")
       .def(py::init<std::size_t>())
       .def("fit", &polyreg_double::fit)
       .def("coef", &polyreg_double::coef)
-      .def("fitted", &polyreg_double::fitted);
+      .def("fitted", &polyreg_double::fitted)
+      .def("predict", &polyreg_double::predict);
 
   /////////////////////////////////////////////////////////////////////////////
   // Graphs
