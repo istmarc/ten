@@ -11,14 +11,14 @@ namespace graph{
 template<class T = float>
 class gmatrix{
    private:
-      size_t _vertices;
-      ten::tensor<T> _m;
       graph_type _gtype;
+      size_t _vertices;
+      ten::tensor<T> _m = ten::tensor<T>::make_default();
+
 
    public:
       gmatrix(const size_t vertices, const graph_type gtype = graph_type::undirected):
-         _vertices(vertices), _gtype(gtype) {
-         _m = ten::zeros<T>({vertices, vertices});
+         _gtype(gtype), _vertices(vertices), _m(ten::zeros<T>({vertices, vertices})) {
       }
 
    void add_edge(size_t src, size_t dest, const T value = 1.0) {

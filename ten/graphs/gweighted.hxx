@@ -57,7 +57,7 @@ template <class T = std::size_t, class W = float> class gweighted {
    }
 
    // Get the adjacency matrix
-   auto matrix() -> ten::tensor<W> {
+   auto to_matrix() -> ten::tensor<W> {
       std::size_t n = _graph.size();
       ten::tensor<W> m = ten::zeros<W>({n, n});
       std::map<T, std::size_t> map;
@@ -66,7 +66,6 @@ template <class T = std::size_t, class W = float> class gweighted {
          map[it->first] = i;
          i++;
       }
-
       for (auto const &[src, value] : _graph) {
          for (auto const &[dest, weight] : value) {
             m(map[src], map[dest]) = weight;

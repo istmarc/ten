@@ -42,7 +42,7 @@ class glist {
 
    // Get the adjacency matrix
   template<typename Type = float>
-   auto matrix() -> ten::tensor<Type> {
+   auto to_matrix() -> ten::tensor<Type> {
       size_t n = _graph.size();
       ten::tensor<Type> m = ten::zeros<Type>({n, n});
       std::map<T, std::size_t> map;
