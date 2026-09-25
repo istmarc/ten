@@ -1305,9 +1305,9 @@ PYBIND11_MODULE(tencore, m) {
       .def("to_matrix_int64", &glist_int32::to_matrix<int64_t>)
       .def("to_matrix_uint64", &glist_int32::to_matrix<uint64_t>)
       .def("dfs", [](glist_int32 &g, int32_t s,
-                     std::function<int32_t(int32_t)> F) { return g.dfs(s, F); })
+                     std::function<void(int32_t)> F) { return g.dfs(s, F); })
       .def("bfs",
-           [](glist_int32 &g, int32_t s, std::function<int32_t(int32_t)> F) {
+           [](glist_int32 &g, int32_t s, std::function<void(int32_t)> F) {
              return g.bfs(s, F);
            });
 
@@ -1325,10 +1325,10 @@ PYBIND11_MODULE(tencore, m) {
       .def("to_matrix_uint64", &glist_uint32::to_matrix<uint64_t>)
       .def("dfs",
            [](glist_uint32 &g, uint32_t s,
-              std::function<uint32_t(uint32_t)> F) { return g.dfs(s, F); })
+              std::function<void(uint32_t)> F) { return g.dfs(s, F); })
       .def("bfs",
            [](glist_uint32 &g, uint32_t s,
-              std::function<uint32_t(uint32_t)> F) { return g.bfs(s, F); });
+              std::function<void(uint32_t)> F) { return g.bfs(s, F); });
 
   py::class_<glist_int64>(m, "glist_int64")
       .def(py::init<graph_type>())
@@ -1343,9 +1343,9 @@ PYBIND11_MODULE(tencore, m) {
       .def("to_matrix_int64", &glist_int64::to_matrix<int64_t>)
       .def("to_matrix_uint64", &glist_int64::to_matrix<uint64_t>)
       .def("dfs", [](glist_int64 &g, int64_t s,
-                     std::function<int64_t(int64_t)> F) { return g.dfs(s, F); })
+                     std::function<void(int64_t)> F) { return g.dfs(s, F); })
       .def("bfs",
-           [](glist_int64 &g, int64_t s, std::function<int64_t(int64_t)> F) {
+           [](glist_int64 &g, int64_t s, std::function<void(int64_t)> F) {
              return g.bfs(s, F);
            });
 
@@ -1363,10 +1363,10 @@ PYBIND11_MODULE(tencore, m) {
       .def("to_matrix_uint64", &glist_uint64::to_matrix<uint64_t>)
       .def("dfs",
            [](glist_uint64 &g, uint64_t s,
-              std::function<uint64_t(uint64_t)> F) { return g.dfs(s, F); })
+              std::function<void(uint64_t)> F) { return g.dfs(s, F); })
       .def("bfs",
            [](glist_uint64 &g, uint64_t s,
-              std::function<uint64_t(uint64_t)> F) { return g.bfs(s, F); });
+              std::function<void(uint64_t)> F) { return g.bfs(s, F); });
 
   py::class_<glist_str>(m, "glist_str")
       .def(py::init<graph_type>())
@@ -1383,9 +1383,9 @@ PYBIND11_MODULE(tencore, m) {
       .def(
           "dfs",
           [](glist_str &g, std::string s,
-             std::function<std::string(std::string)> F) { return g.dfs(s, F); })
+             std::function<void(std::string)> F) { return g.dfs(s, F); })
       .def("bfs", [](glist_str &g, std::string s,
-                     std::function<std::string(std::string)> F) {
+                     std::function<void(std::string)> F) {
         return g.bfs(s, F);
       });
 
