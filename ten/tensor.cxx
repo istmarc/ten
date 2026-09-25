@@ -1,12 +1,13 @@
-#include "combinatorics/enumerative.hxx"
-#include "learning/linear_model.hxx"
-#include "learning/polyreg.hxx"
+#include "graphs/glist.hxx"
+#include "graphs/gmatrix.hxx"
+#include "graphs/gweighted.hxx"
+#include "graphs/types.hxx"
 #include <cmath>
 
 #include <functional>
-#include <ten/types.hxx>
 
 #include <ten/cmb>
+#include <ten/graph>
 #include <ten/io>
 #include <ten/linalg>
 #include <ten/math>
@@ -16,6 +17,7 @@
 #include <ten/random>
 #include <ten/sort>
 #include <ten/tensor>
+#include <ten/types.hxx>
 
 #include <pybind11/attr.h>
 #include <pybind11/functional.h>
@@ -477,6 +479,41 @@ template <typename T>
 auto py_brownian_motion_all_paths(std::size_t n, std::size_t t) {
   return ten::brownian_motion(n, t);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Graphs
+
+using graph_type = ten::graph::graph_type;
+
+using glist_int32 = ten::graph::glist<int32_t>;
+using glist_uint32 = ten::graph::glist<uint32_t>;
+using glist_int64 = ten::graph::glist<int64_t>;
+using glist_uint64 = ten::graph::glist<uint64_t>;
+using glist_str = ten::graph::glist<std::string>;
+
+using gedge_int32 = ten::graph::gedge<int32_t>;
+using gedge_uint32 = ten::graph::gedge<uint32_t>;
+using gedge_int64 = ten::graph::gedge<int64_t>;
+using gedge_uint64 = ten::graph::gedge<uint64_t>;
+using gedge_str = ten::graph::gedge<std::string>;
+
+using gmatrix_float = ten::graph::gmatrix<float>;
+using gmatrix_double = ten::graph::gmatrix<double>;
+
+using gweighted_int32_int32 = ten::graph::gweighted<int32_t, int32_t>;
+using gweighted_int32_float = ten::graph::gweighted<int32_t, float>;
+using gweighted_int32_double = ten::graph::gweighted<int32_t, double>;
+using gweighted_int64_int64 = ten::graph::gweighted<int64_t, int64_t>;
+using gweighted_int64_float = ten::graph::gweighted<int64_t, float>;
+using gweighted_int64_double = ten::graph::gweighted<int64_t, double>;
+using gweighted_uint32_uint32 = ten::graph::gweighted<uint32_t, uint32_t>;
+using gweighted_uint32_float = ten::graph::gweighted<uint32_t, float>;
+using gweighted_uint32_double = ten::graph::gweighted<uint32_t, double>;
+using gweighted_uint64_uint64 = ten::graph::gweighted<uint64_t, uint64_t>;
+using gweighted_uint64_float = ten::graph::gweighted<uint64_t, float>;
+using gweighted_uint64_double = ten::graph::gweighted<uint64_t, double>;
+using gweighted_str_float = ten::graph::gweighted<std::string, float>;
+using gweighted_str_double = ten::graph::gweighted<std::string, double>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Compute linear index
@@ -1222,28 +1259,287 @@ PYBIND11_MODULE(tencore, m) {
 
   // Linear model
   py::class_<linear_model_float>(m, "linear_model_float")
-    .def(py::init<lm_method>())
-    .def("fit", &linear_model_float::fit)
-    .def("coef", &linear_model_float::coef)
-    .def("fitted", &linear_model_float::fitted);
+      .def(py::init<lm_method>())
+      .def("fit", &linear_model_float::fit)
+      .def("coef", &linear_model_float::coef)
+      .def("fitted", &linear_model_float::fitted);
 
   py::class_<linear_model_double>(m, "linear_model_double")
-    .def(py::init<lm_method>())
-    .def("fit", &linear_model_double::fit)
-    .def("coef", &linear_model_double::coef)
-    .def("fitted", &linear_model_double::fitted);
+      .def(py::init<lm_method>())
+      .def("fit", &linear_model_double::fit)
+      .def("coef", &linear_model_double::coef)
+      .def("fitted", &linear_model_double::fitted);
 
   // Polyreg
   py::class_<polyreg_float>(m, "polyreg_float")
-    .def(py::init<std::size_t>())
-    .def("fit", &polyreg_float::fit)
-    .def("coef", &polyreg_float::coef)
-    .def("fitted", &polyreg_float::fitted);
+      .def(py::init<std::size_t>())
+      .def("fit", &polyreg_float::fit)
+      .def("coef", &polyreg_float::coef)
+      .def("fitted", &polyreg_float::fitted);
 
   py::class_<polyreg_double>(m, "polyreg_double")
-    .def(py::init<std::size_t>())
-    .def("fit", &polyreg_double::fit)
-    .def("coef", &polyreg_double::coef)
-    .def("fitted", &polyreg_double::fitted);
+      .def(py::init<std::size_t>())
+      .def("fit", &polyreg_double::fit)
+      .def("coef", &polyreg_double::coef)
+      .def("fitted", &polyreg_double::fitted);
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Graphs
+
+  py::enum_<graph_type>(m, "graph_type", py::arithmetic())
+      .value("undirected", ten::graph::graph_type::undirected)
+      .value("directed", ten::graph::graph_type::directed);
+
+  // List
+  py::class_<glist_int32>(m, "glist_int32")
+      .def(py::init<graph_type>())
+      .def("empty", &glist_int32::empty)
+      .def("add_vertex", &glist_int32::add_vertex)
+      .def("add_edge", &glist_int32::add_edge)
+      .def("has_edge", &glist_int32::has_edge)
+      .def("to_matrix_float", &glist_int32::to_matrix<float>)
+      .def("to_matrix_double", &glist_int32::to_matrix<double>)
+      .def("to_matrix_int32", &glist_int32::to_matrix<int32_t>)
+      .def("to_matrix_uint32", &glist_int32::to_matrix<uint32_t>)
+      .def("to_matrix_int64", &glist_int32::to_matrix<int64_t>)
+      .def("to_matrix_uint64", &glist_int32::to_matrix<uint64_t>)
+      .def("dfs", [](glist_int32 &g, int32_t s,
+                     std::function<int32_t(int32_t)> F) { return g.dfs(s, F); })
+      .def("bfs",
+           [](glist_int32 &g, int32_t s, std::function<int32_t(int32_t)> F) {
+             return g.bfs(s, F);
+           });
+
+  py::class_<glist_uint32>(m, "glist_uint32")
+      .def(py::init<graph_type>())
+      .def("empty", &glist_uint32::empty)
+      .def("add_vertex", &glist_uint32::add_vertex)
+      .def("add_edge", &glist_uint32::add_edge)
+      .def("has_edge", &glist_uint32::has_edge)
+      .def("to_matrix_float", &glist_uint32::to_matrix<float>)
+      .def("to_matrix_double", &glist_uint32::to_matrix<double>)
+      .def("to_matrix_int32", &glist_uint32::to_matrix<int32_t>)
+      .def("to_matrix_uint32", &glist_uint32::to_matrix<uint32_t>)
+      .def("to_matrix_int64", &glist_uint32::to_matrix<int64_t>)
+      .def("to_matrix_uint64", &glist_uint32::to_matrix<uint64_t>)
+      .def("dfs",
+           [](glist_uint32 &g, uint32_t s,
+              std::function<uint32_t(uint32_t)> F) { return g.dfs(s, F); })
+      .def("bfs",
+           [](glist_uint32 &g, uint32_t s,
+              std::function<uint32_t(uint32_t)> F) { return g.bfs(s, F); });
+
+  py::class_<glist_int64>(m, "glist_int64")
+      .def(py::init<graph_type>())
+      .def("empty", &glist_int64::empty)
+      .def("add_vertex", &glist_int64::add_vertex)
+      .def("add_edge", &glist_int64::add_edge)
+      .def("has_edge", &glist_int64::has_edge)
+      .def("to_matrix_float", &glist_int64::to_matrix<float>)
+      .def("to_matrix_double", &glist_int64::to_matrix<double>)
+      .def("to_matrix_int32", &glist_int64::to_matrix<int32_t>)
+      .def("to_matrix_uint32", &glist_int64::to_matrix<uint32_t>)
+      .def("to_matrix_int64", &glist_int64::to_matrix<int64_t>)
+      .def("to_matrix_uint64", &glist_int64::to_matrix<uint64_t>)
+      .def("dfs", [](glist_int64 &g, int64_t s,
+                     std::function<int64_t(int64_t)> F) { return g.dfs(s, F); })
+      .def("bfs",
+           [](glist_int64 &g, int64_t s, std::function<int64_t(int64_t)> F) {
+             return g.bfs(s, F);
+           });
+
+  py::class_<glist_uint64>(m, "glist_uint64")
+      .def(py::init<graph_type>())
+      .def("empty", &glist_uint64::empty)
+      .def("add_vertex", &glist_uint64::add_vertex)
+      .def("add_edge", &glist_uint64::add_edge)
+      .def("has_edge", &glist_uint64::has_edge)
+      .def("to_matrix_float", &glist_uint64::to_matrix<float>)
+      .def("to_matrix_double", &glist_uint64::to_matrix<double>)
+      .def("to_matrix_int32", &glist_uint64::to_matrix<int32_t>)
+      .def("to_matrix_uint32", &glist_uint64::to_matrix<uint32_t>)
+      .def("to_matrix_int64", &glist_uint64::to_matrix<int64_t>)
+      .def("to_matrix_uint64", &glist_uint64::to_matrix<uint64_t>)
+      .def("dfs",
+           [](glist_uint64 &g, uint64_t s,
+              std::function<uint64_t(uint64_t)> F) { return g.dfs(s, F); })
+      .def("bfs",
+           [](glist_uint64 &g, uint64_t s,
+              std::function<uint64_t(uint64_t)> F) { return g.bfs(s, F); });
+
+  py::class_<glist_str>(m, "glist_str")
+      .def(py::init<graph_type>())
+      .def("empty", &glist_str::empty)
+      .def("add_vertex", &glist_str::add_vertex)
+      .def("add_edge", &glist_str::add_edge)
+      .def("has_edge", &glist_str::has_edge)
+      .def("to_matrix_float", &glist_str::to_matrix<float>)
+      .def("to_matrix_double", &glist_str::to_matrix<double>)
+      .def("to_matrix_int32", &glist_str::to_matrix<int32_t>)
+      .def("to_matrix_uint32", &glist_str::to_matrix<uint32_t>)
+      .def("to_matrix_int64", &glist_str::to_matrix<int64_t>)
+      .def("to_matrix_uint64", &glist_str::to_matrix<uint64_t>)
+      .def(
+          "dfs",
+          [](glist_str &g, std::string s,
+             std::function<std::string(std::string)> F) { return g.dfs(s, F); })
+      .def("bfs", [](glist_str &g, std::string s,
+                     std::function<std::string(std::string)> F) {
+        return g.bfs(s, F);
+      });
+
+  // Edge list
+  py::class_<gedge_int32>(m, "gedge_int32")
+      .def(py::init<graph_type>())
+      .def("empty", &gedge_int32::empty)
+      .def("add_edge", &gedge_int32::add_edge);
+
+  py::class_<gedge_uint32>(m, "gedge_uint32")
+      .def(py::init<graph_type>())
+      .def("empty", &gedge_uint32::empty)
+      .def("add_edge", &gedge_uint32::add_edge);
+
+  py::class_<gedge_int64>(m, "gedge_int64")
+      .def(py::init<graph_type>())
+      .def("empty", &gedge_int64::empty)
+      .def("add_edge", &gedge_int64::add_edge);
+
+  py::class_<gedge_uint64>(m, "gedge_uint64")
+      .def(py::init<graph_type>())
+      .def("empty", &gedge_uint64::empty)
+      .def("add_edge", &gedge_uint64::add_edge);
+
+  py::class_<gedge_str>(m, "gedge_str")
+      .def(py::init<graph_type>())
+      .def("empty", &gedge_str::empty)
+      .def("add_edge", &gedge_str::add_edge);
+
+  // Matrix
+  py::class_<gmatrix_float>(m, "gmatrix_float")
+      .def(py::init<std::size_t, graph_type>())
+      .def("add_edge", &gmatrix_float::add_edge)
+      .def("has_edge", &gmatrix_float::has_edge);
+
+  py::class_<gmatrix_double>(m, "gmatrix_double")
+      .def(py::init<std::size_t, graph_type>())
+      .def("add_edge", &gmatrix_double::add_edge)
+      .def("has_edge", &gmatrix_double::has_edge);
+
+  // Weighted
+  py::class_<gweighted_int32_int32>(m, "gweighted_int32_int32")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_int32_int32::empty)
+      .def("add_vertex", &gweighted_int32_int32::add_vertex)
+      .def("add_edge", &gweighted_int32_int32::add_edge)
+      .def("has_edge", &gweighted_int32_int32::has_edge)
+      .def("weight", &gweighted_int32_int32::weight)
+      .def("to_matrix", &gweighted_int32_int32::to_matrix);
+
+  py::class_<gweighted_int32_float>(m, "gweighted_int32_float")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_int32_float::empty)
+      .def("add_vertex", &gweighted_int32_float::add_vertex)
+      .def("add_edge", &gweighted_int32_float::add_edge)
+      .def("has_edge", &gweighted_int32_float::has_edge)
+      .def("weight", &gweighted_int32_float::weight)
+      .def("to_matrix", &gweighted_int32_float::to_matrix);
+
+  py::class_<gweighted_int32_double>(m, "gweighted_int32_double")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_int32_double::empty)
+      .def("add_vertex", &gweighted_int32_double::add_vertex)
+      .def("add_edge", &gweighted_int32_double::add_edge)
+      .def("has_edge", &gweighted_int32_double::has_edge)
+      .def("weight", &gweighted_int32_double::weight)
+      .def("to_matrix", &gweighted_int32_double::to_matrix);
+
+  py::class_<gweighted_int64_int64>(m, "gweighted_int64_int64")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_int64_int64::empty)
+      .def("add_vertex", &gweighted_int64_int64::add_vertex)
+      .def("add_edge", &gweighted_int64_int64::add_edge)
+      .def("has_edge", &gweighted_int64_int64::has_edge)
+      .def("weight", &gweighted_int64_int64::weight)
+      .def("to_matrix", &gweighted_int64_int64::to_matrix);
+
+  py::class_<gweighted_int64_float>(m, "gweighted_int64_float")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_int64_float::empty)
+      .def("add_vertex", &gweighted_int64_float::add_vertex)
+      .def("add_edge", &gweighted_int64_float::add_edge)
+      .def("has_edge", &gweighted_int64_float::has_edge)
+      .def("weight", &gweighted_int64_float::weight)
+      .def("to_matrix", &gweighted_int64_float::to_matrix);
+
+  py::class_<gweighted_uint32_uint32>(m, "gweighted_uint32_uint32")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_uint32_uint32::empty)
+      .def("add_vertex", &gweighted_uint32_uint32::add_vertex)
+      .def("add_edge", &gweighted_uint32_uint32::add_edge)
+      .def("has_edge", &gweighted_uint32_uint32::has_edge)
+      .def("weight", &gweighted_uint32_uint32::weight)
+      .def("to_matrix", &gweighted_uint32_uint32::to_matrix);
+
+  py::class_<gweighted_uint32_float>(m, "gweighted_uint32_float")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_uint32_float::empty)
+      .def("add_vertex", &gweighted_uint32_float::add_vertex)
+      .def("add_edge", &gweighted_uint32_float::add_edge)
+      .def("has_edge", &gweighted_uint32_float::has_edge)
+      .def("weight", &gweighted_uint32_float::weight)
+      .def("to_matrix", &gweighted_uint32_float::to_matrix);
+
+  py::class_<gweighted_uint32_double>(m, "gweighted_uint32_double")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_uint32_double::empty)
+      .def("add_vertex", &gweighted_uint32_double::add_vertex)
+      .def("add_edge", &gweighted_uint32_double::add_edge)
+      .def("has_edge", &gweighted_uint32_double::has_edge)
+      .def("weight", &gweighted_uint32_double::weight)
+      .def("to_matrix", &gweighted_uint32_double::to_matrix);
+
+  py::class_<gweighted_uint64_uint64>(m, "gweighted_uint64_uint64")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_uint64_uint64::empty)
+      .def("add_vertex", &gweighted_uint64_uint64::add_vertex)
+      .def("add_edge", &gweighted_uint64_uint64::add_edge)
+      .def("has_edge", &gweighted_uint64_uint64::has_edge)
+      .def("weight", &gweighted_uint64_uint64::weight)
+      .def("to_matrix", &gweighted_uint64_uint64::to_matrix);
+
+  py::class_<gweighted_uint64_float>(m, "gweighted_uint64_float")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_uint64_float::empty)
+      .def("add_vertex", &gweighted_uint64_float::add_vertex)
+      .def("add_edge", &gweighted_uint64_float::add_edge)
+      .def("has_edge", &gweighted_uint64_float::has_edge)
+      .def("weight", &gweighted_uint64_float::weight)
+      .def("to_matrix", &gweighted_uint64_float::to_matrix);
+
+  py::class_<gweighted_uint64_double>(m, "gweighted_uint64_double")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_uint64_double::empty)
+      .def("add_vertex", &gweighted_uint64_double::add_vertex)
+      .def("add_edge", &gweighted_uint64_double::add_edge)
+      .def("has_edge", &gweighted_uint64_double::has_edge)
+      .def("weight", &gweighted_uint64_double::weight)
+      .def("to_matrix", &gweighted_uint64_double::to_matrix);
+
+  py::class_<gweighted_str_float>(m, "gweighted_str_float")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_str_float::empty)
+      .def("add_vertex", &gweighted_str_float::add_vertex)
+      .def("add_edge", &gweighted_str_float::add_edge)
+      .def("has_edge", &gweighted_str_float::has_edge)
+      .def("weight", &gweighted_str_float::weight)
+      .def("to_matrix", &gweighted_str_float::to_matrix);
+
+  py::class_<gweighted_str_double>(m, "gweighted_str_double")
+      .def(py::init<graph_type>())
+      .def("empty", &gweighted_str_double::empty)
+      .def("add_vertex", &gweighted_str_double::add_vertex)
+      .def("add_edge", &gweighted_str_double::add_edge)
+      .def("has_edge", &gweighted_str_double::has_edge)
+      .def("weight", &gweighted_str_double::weight)
+      .def("to_matrix", &gweighted_str_double::to_matrix);
 }
