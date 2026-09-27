@@ -334,6 +334,8 @@ template <typename T> auto py_ls_svd(ten::tensor<T> &A, ten::tensor<T> &b) {
   return ten::linalg::solve(A, b, ten::linalg::ls_method::svd);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 using nls_options_float = ten::linalg::nls_options<float>;
 using nls_options_double = ten::linalg::nls_options<double>;
 
@@ -341,17 +343,30 @@ template <typename T>
 auto py_nls(std::function<ten::tensor<T>(ten::tensor<T> &, ten::tensor<T> &)> f,
             ten::tensor<T> &x, ten::tensor<T> &y,
             std::function<ten::tensor<T>(ten::tensor<T> &, ten::tensor<T> &)> J,
-            std::size_t n, std::optional<ten::tensor<T>> beta0,
-            std::optional<ten::tensor<T>> H, std::optional<ten::tensor<T>> W,
-            std::size_t itermax, T eps, bool verbose) {
-  ten::linalg::nls_options<T> options{.n = n,
-                                      .beta0 = beta0,
-                                      .H = H,
-                                      .W = W,
+            ten::linalg::nls_options<T> options) {
+  return ten::linalg::nls(f, x, y, J, options);
+}
+
+template <typename T>
+auto py_make_nls_options(ten::linalg::nls_method method, std::size_t n,
+                         std::size_t itermax, T eps, bool verbose) {
+  return ten::linalg::nls_options<T>({.method = method,
+                                      .n = n,
                                       .itermax = itermax,
                                       .eps = eps,
-                                      .verbose = verbose};
-  return ten::linalg::nls(f, x, y, J, options);
+                                      .verbose = verbose});
+}
+
+template <typename T>
+auto py_make_nls_options_beta0(ten::linalg::nls_method method, std::size_t n,
+                               ten::tensor<T> beta0, std::size_t itermax, T eps,
+                               bool verbose) {
+  return ten::linalg::nls_options<T>({.method = method,
+                                      .n = n,
+                                      .beta0 = beta0,
+                                      .itermax = itermax,
+                                      .eps = eps,
+                                      .verbose = verbose});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1194,6 +1209,15 @@ PYBIND11_MODULE(tencore, m) {
       .value("qr", ten::linalg::nls_method::qr)
       .value("svd", ten::linalg::nls_method::svd)
       .value("newton", ten::linalg::nls_method::newton);
+
+  // Non linear least square options
+  py::class_<nls_options_float>(m, "nls_options_float");
+  py::class_<nls_options_double>(m, "nls_options_double");
+
+  m.def("make_nls_options_float", &py_make_nls_options<float>);
+  m.def("make_nls_options_double", &py_make_nls_options<double>);
+  m.def("make_nls_options_beta0_float", &py_make_nls_options_beta0<float>);
+  m.def("make_nls_options_beta0_double", &py_make_nls_options_beta0<double>);
 
   // Nonlinear least square
   m.def("nls_float", &py_nls<float>);
