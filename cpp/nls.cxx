@@ -29,10 +29,12 @@ int main() {
   tensor rate({7},
               {0.050f, 0.127f, 0.094f, 0.2122f, 0.2729f, 0.2665f, 0.3317f});
 
-  auto beta = linalg::nls_newton_gauss(
+  auto beta = linalg::nls(
       f, s, rate, Jr,
-      linalg::nls_options<tensor<float>>{
-          .n = 2, .beta0 = tensor<float>({2}, {0.9f, 0.2f}), .itermax = 100});
+      linalg::nls_options<float>{.n = 2,
+                                 .beta0 = tensor<float>({2}, {0.9f, 0.2f}),
+                                 .itermax = 100,
+                                 .verbose = true});
 
   std::cout << "beta = \n";
   std::cout << beta << std::endl;
@@ -43,5 +45,4 @@ int main() {
   std::cout << rate << std::endl;
   std::cout << "yhat =\n";
   std::cout << yhat << std::endl;
-
 }

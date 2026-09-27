@@ -112,26 +112,24 @@ enum class nls_method {
 
 /// Non linear least squares options
 template <class T> struct nls_options {
-  using value_type = T::value_type;
-
   nls_method method = nls_method::gauss_newton;
 
   std::size_t n;
-  std::optional<T> beta0 = std::nullopt;
-  std::optional<T> H = std::nullopt;
-  std::optional<T> W = std::nullopt;
+  std::optional<tensor<T>> beta0 = std::nullopt;
+  std::optional<tensor<T>> H = std::nullopt;
+  std::optional<tensor<T>> W = std::nullopt;
   std::size_t itermax = 1000;
-  value_type eps = 1e-3;
+  T eps = 1e-3;
+  bool verbose = false;
 };
 
-/// Nonlinear least squares
+/// Nonlinear least squares using Gauss Newton's method
 /// min ||f(x,beta)-y||2
-template <class F, class Jacobian, Tensor T, Tensor R>
-auto nls_newton_gauss(F f, T &&x, T &&y, Jacobian Jr, nls_options<R> options)
+template <class F, class Jacobian, Tensor T>
+auto nls(F f, T &&x, T &&y, Jacobian Jr,
+         nls_options<typename std::remove_cvref_t<T>::value_type> options)
     -> decltype(auto) {
   using value_type = std::remove_cvref_t<T>::value_type;
-  static_assert(std::is_same_v<value_type, typename R::value_type>,
-                "Tensors must have the same value type.");
   std::size_t m = x.size();
   std::size_t n = options.n;
 
@@ -146,7 +144,11 @@ auto nls_newton_gauss(F f, T &&x, T &&y, Jacobian Jr, nls_options<R> options)
     // Compute the jacobian
     tensor<value_type> J = Jr(x, beta);
     // Compute the residuals
-    res = y - f(x, beta);
+    // FIXME res = y - f(x,beta) with expression matching
+    tensor<value_type> fx = f(x, beta);
+    for (std::size_t i = 0; i < m; i++) {
+      res[i] = y[i] - fx[i];
+    }
     tensor<value_type> JtJ = ten::transposed(J) * J;
     tensor<value_type> JtRes = ten::transposed(J) * res;
     tensor<value_type> delta = ten::linalg::solve(JtJ, JtRes);
@@ -159,6 +161,10 @@ auto nls_newton_gauss(F f, T &&x, T &&y, Jacobian Jr, nls_options<R> options)
       s += std::abs(delta[k]);
     }
     if (std::sqrt(s) < options.eps) {
+      if (options.verbose) {
+        std::cout << "Gauss Newton algorithm converged after " << i
+                  << " iterations.\n";
+      }
       break;
     }
   }
