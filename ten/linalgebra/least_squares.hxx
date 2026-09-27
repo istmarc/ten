@@ -136,7 +136,7 @@ auto nls(F f, T &&x, T &&y, Jacobian Jr,
   // Gauss newton algorithm (JtJ)Delta_beta = Jt Delta_y
   tensor<value_type> beta = options.beta0.has_value()
                                 ? options.beta0.value().copy()
-                                : ten::rand_norm({n});
+                                : ten::rand_norm<value_type>({n});
   tensor<value_type> beta0 = beta.copy();
   tensor<value_type> res({m});
   tensor<value_type> diff({m});

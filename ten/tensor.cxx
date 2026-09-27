@@ -1,3 +1,4 @@
+#include "linalgebra/least_squares.hxx"
 #include <cmath>
 
 #include <functional>
@@ -331,6 +332,26 @@ template <typename T> auto py_ls_lu(ten::tensor<T> &A, ten::tensor<T> &b) {
 
 template <typename T> auto py_ls_svd(ten::tensor<T> &A, ten::tensor<T> &b) {
   return ten::linalg::solve(A, b, ten::linalg::ls_method::svd);
+}
+
+using nls_options_float = ten::linalg::nls_options<float>;
+using nls_options_double = ten::linalg::nls_options<double>;
+
+template <typename T>
+auto py_nls(std::function<ten::tensor<T>(ten::tensor<T> &, ten::tensor<T> &)> f,
+            ten::tensor<T> &x, ten::tensor<T> &y,
+            std::function<ten::tensor<T>(ten::tensor<T> &, ten::tensor<T> &)> J,
+            std::size_t n, std::optional<ten::tensor<T>> beta0,
+            std::optional<ten::tensor<T>> H, std::optional<ten::tensor<T>> W,
+            std::size_t itermax, T eps, bool verbose) {
+  ten::linalg::nls_options<T> options{.n = n,
+                                      .beta0 = beta0,
+                                      .H = H,
+                                      .W = W,
+                                      .itermax = itermax,
+                                      .eps = eps,
+                                      .verbose = verbose};
+  return ten::linalg::nls(f, x, y, J, options);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1166,6 +1187,18 @@ PYBIND11_MODULE(tencore, m) {
   m.def("lsqr_float", &py_lsqr<float>);
   m.def("lsqr_double", &py_lsqr<double>);
 
+  // Nonlinear least square method
+  py::enum_<ten::linalg::nls_method>(m, "nls_method", py::arithmetic())
+      .value("gauss_newton", ten::linalg::nls_method::gauss_newton)
+      .value("mardquardt", ten::linalg::nls_method::mardquardt)
+      .value("qr", ten::linalg::nls_method::qr)
+      .value("svd", ten::linalg::nls_method::svd)
+      .value("newton", ten::linalg::nls_method::newton);
+
+  // Nonlinear least square
+  m.def("nls_float", &py_nls<float>);
+  m.def("nls_double", &py_nls<double>);
+
   //////////////////////////////////////////////////////////////////////////////
   // Sort
 
@@ -1268,7 +1301,6 @@ PYBIND11_MODULE(tencore, m) {
       .def("fitted", &linear_model_double::fitted)
       .def("predict", &linear_model_double::predict);
 
-
   // Polyreg
   py::class_<polyreg_float>(m, "polyreg_float")
       .def(py::init<std::size_t>())
@@ -1306,10 +1338,8 @@ PYBIND11_MODULE(tencore, m) {
       .def("to_matrix_uint64", &glist_int32::to_matrix<uint64_t>)
       .def("dfs", [](glist_int32 &g, int32_t s,
                      std::function<void(int32_t)> F) { return g.dfs(s, F); })
-      .def("bfs",
-           [](glist_int32 &g, int32_t s, std::function<void(int32_t)> F) {
-             return g.bfs(s, F);
-           });
+      .def("bfs", [](glist_int32 &g, int32_t s,
+                     std::function<void(int32_t)> F) { return g.bfs(s, F); });
 
   py::class_<glist_uint32>(m, "glist_uint32")
       .def(py::init<graph_type>())
@@ -1323,12 +1353,10 @@ PYBIND11_MODULE(tencore, m) {
       .def("to_matrix_uint32", &glist_uint32::to_matrix<uint32_t>)
       .def("to_matrix_int64", &glist_uint32::to_matrix<int64_t>)
       .def("to_matrix_uint64", &glist_uint32::to_matrix<uint64_t>)
-      .def("dfs",
-           [](glist_uint32 &g, uint32_t s,
-              std::function<void(uint32_t)> F) { return g.dfs(s, F); })
-      .def("bfs",
-           [](glist_uint32 &g, uint32_t s,
-              std::function<void(uint32_t)> F) { return g.bfs(s, F); });
+      .def("dfs", [](glist_uint32 &g, uint32_t s,
+                     std::function<void(uint32_t)> F) { return g.dfs(s, F); })
+      .def("bfs", [](glist_uint32 &g, uint32_t s,
+                     std::function<void(uint32_t)> F) { return g.bfs(s, F); });
 
   py::class_<glist_int64>(m, "glist_int64")
       .def(py::init<graph_type>())
@@ -1344,10 +1372,8 @@ PYBIND11_MODULE(tencore, m) {
       .def("to_matrix_uint64", &glist_int64::to_matrix<uint64_t>)
       .def("dfs", [](glist_int64 &g, int64_t s,
                      std::function<void(int64_t)> F) { return g.dfs(s, F); })
-      .def("bfs",
-           [](glist_int64 &g, int64_t s, std::function<void(int64_t)> F) {
-             return g.bfs(s, F);
-           });
+      .def("bfs", [](glist_int64 &g, int64_t s,
+                     std::function<void(int64_t)> F) { return g.bfs(s, F); });
 
   py::class_<glist_uint64>(m, "glist_uint64")
       .def(py::init<graph_type>())
@@ -1361,12 +1387,10 @@ PYBIND11_MODULE(tencore, m) {
       .def("to_matrix_uint32", &glist_uint64::to_matrix<uint32_t>)
       .def("to_matrix_int64", &glist_uint64::to_matrix<int64_t>)
       .def("to_matrix_uint64", &glist_uint64::to_matrix<uint64_t>)
-      .def("dfs",
-           [](glist_uint64 &g, uint64_t s,
-              std::function<void(uint64_t)> F) { return g.dfs(s, F); })
-      .def("bfs",
-           [](glist_uint64 &g, uint64_t s,
-              std::function<void(uint64_t)> F) { return g.bfs(s, F); });
+      .def("dfs", [](glist_uint64 &g, uint64_t s,
+                     std::function<void(uint64_t)> F) { return g.dfs(s, F); })
+      .def("bfs", [](glist_uint64 &g, uint64_t s,
+                     std::function<void(uint64_t)> F) { return g.bfs(s, F); });
 
   py::class_<glist_str>(m, "glist_str")
       .def(py::init<graph_type>())
@@ -1380,14 +1404,14 @@ PYBIND11_MODULE(tencore, m) {
       .def("to_matrix_uint32", &glist_str::to_matrix<uint32_t>)
       .def("to_matrix_int64", &glist_str::to_matrix<int64_t>)
       .def("to_matrix_uint64", &glist_str::to_matrix<uint64_t>)
-      .def(
-          "dfs",
-          [](glist_str &g, std::string s,
-             std::function<void(std::string)> F) { return g.dfs(s, F); })
-      .def("bfs", [](glist_str &g, std::string s,
-                     std::function<void(std::string)> F) {
-        return g.bfs(s, F);
-      });
+      .def("dfs",
+           [](glist_str &g, std::string s, std::function<void(std::string)> F) {
+             return g.dfs(s, F);
+           })
+      .def("bfs",
+           [](glist_str &g, std::string s, std::function<void(std::string)> F) {
+             return g.bfs(s, F);
+           });
 
   // Edge list
   py::class_<gedge_int32>(m, "gedge_int32")
