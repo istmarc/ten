@@ -39,7 +39,7 @@ std::tuple<tensor<T>, tensor<T>> brownian_motion(const tensor<T> &s, std::size_t
 /// S of shape [n x n]
 template <typename T = float>
 std::tuple<tensor<T>, tensor<T>> brownian_motion(const tensor<T> &S, std::size_t n, std::size_t t) {
-  tensor<T> W({n, t});
+  tensor<T> W({t, n});
   T deltat = 1. / t;
   tensor<T> index({t});
   index[0] = 0.;
@@ -48,7 +48,7 @@ std::tuple<tensor<T>, tensor<T>> brownian_motion(const tensor<T> &S, std::size_t
   }
   T sqrtdeltat = std::sqrt(deltat);
   T sqrtn = std::sqrt(n);
-  // A column S(:, j) is a random walk S(:,j) -> W(j,:)
+  // A column S(:, j) is a random walk S(:,j) -> W(:,j)
   for (std::size_t j = 0; j < n; j++) {
     // Compute brownian motion of S(:, j)
     tensor<T> cums({n});
@@ -56,11 +56,11 @@ std::tuple<tensor<T>, tensor<T>> brownian_motion(const tensor<T> &S, std::size_t
     for (std::size_t i = 1; i < n; i++) {
       cums[i] = cums[i - 1] + S(i, j);
     }
-    // Save the brownian motion in W(j,:)
+    // Save the brownian motion in W(:,j)
     T ts = 0.;
     std::size_t i = 0;
     while (std::size_t(std::floor(n * ts)) < n) {
-      W(j, i) = cums[std::size_t(std::floor(n * ts))] * sqrtdeltat / sqrtn;
+      W(i,j) = cums[std::size_t(std::floor(n * ts))] * sqrtdeltat / sqrtn;
       ts += deltat;
       i++;
     }
