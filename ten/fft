@@ -1,0 +1,6 @@
+#ifndef TEN_FFT
+#define TEN_FFT
+
+#include <ten/ffts/fft.hxx>
+
+#endif
