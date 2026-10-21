@@ -1,0 +1,6 @@
+#ifndef TEN_DIFFEQ
+#define TEN_DIFFEQ
+
+#include <ten/diffeqs/euler.hxx>
+
+#endif
