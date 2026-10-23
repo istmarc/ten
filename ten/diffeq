@@ -2,5 +2,6 @@
 #define TEN_DIFFEQ
 
 #include <ten/diffeqs/euler.hxx>
+#include <ten/diffeqs/midpoint.hxx>
 
 #endif
