@@ -15,6 +15,8 @@
 #include <ten/sort>
 #include <ten/tensor>
 #include <ten/types.hxx>
+#include <ten/diffeq>
+#include <ten/fft>
 
 #include <pybind11/attr.h>
 #include <pybind11/functional.h>
@@ -513,6 +515,14 @@ auto py_brownian_motion_all_paths(std::size_t n, std::size_t t) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Differential equations
+
+template<typename T>
+auto py_euler(T t0, T y0, std::function<T(T, T)> df, T h, std::size_t n) {
+  return ten::euler(t0, y0, df, h, n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Graphs
 
 using graph_type = ten::graph::graph_type;
@@ -806,6 +816,64 @@ PYBIND11_MODULE(tencore, m) {
       .def("col", &tensor_uint64::col)
       .def("row", &tensor_uint64::row)
       .def("__repr__", [](const tensor_uint64 &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
+
+  // Tensor complex float
+  py::class_<tensor_c>(m, "tensor_c")
+      .def("make", &py_make_tensor<std::complex<float>>)
+      .def("rank", &tensor_c::rank)
+      .def("size", [](const tensor_c &t) { return t.size(); })
+      .def("shape", &tensor_c::shape)
+      .def("dim", &tensor_c::dim)
+      .def("strides", &tensor_c::strides)
+      .def("data_type", &tensor_c::data_type)
+      .def("format", &tensor_c::format)
+      .def("storage_order", &tensor_c::storage_order)
+      .def("__getitem__",
+           [](const tensor_c &t, size_t index) { return t[index]; })
+      .def("__setitem__",
+           [](tensor_c &t, size_t index, float value) { t[index] = value; })
+      .def("is_transposed", &tensor_c::is_transposed)
+      .def("is_symmetric", &tensor_c::is_symmetric)
+      .def("is_hermitian", &tensor_c::is_hermitian)
+      .def("is_diagonal", &tensor_c::is_diagonal)
+      .def("is_lower_tr", &tensor_c::is_lower_tr)
+      .def("is_upper_tr", &tensor_c::is_upper_tr)
+      .def("col", &tensor_c::col)
+      .def("row", &tensor_c::row)
+      .def("__repr__", [](const tensor_c &t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+      });
+
+  // Tensor complex double
+  py::class_<tensor_z>(m, "tensor_z")
+      .def("make", &py_make_tensor<std::complex<double>>)
+      .def("rank", &tensor_z::rank)
+      .def("size", [](const tensor_z &t) { return t.size(); })
+      .def("shape", &tensor_z::shape)
+      .def("dim", &tensor_z::dim)
+      .def("strides", &tensor_z::strides)
+      .def("data_type", &tensor_z::data_type)
+      .def("format", &tensor_z::format)
+      .def("storage_order", &tensor_z::storage_order)
+      .def("__getitem__",
+           [](const tensor_z &t, size_t index) { return t[index]; })
+      .def("__setitem__",
+           [](tensor_z &t, size_t index, double value) { t[index] = value; })
+      .def("is_transposed", &tensor_z::is_transposed)
+      .def("is_symmetric", &tensor_z::is_symmetric)
+      .def("is_hermitian", &tensor_z::is_hermitian)
+      .def("is_diagonal", &tensor_z::is_diagonal)
+      .def("is_lower_tr", &tensor_z::is_lower_tr)
+      .def("is_upper_tr", &tensor_z::is_upper_tr)
+      .def("col", &tensor_z::col)
+      .def("row", &tensor_z::row)
+      .def("__repr__", [](const tensor_z &t) {
         std::stringstream ss;
         ss << t;
         return ss.str();
@@ -1277,6 +1345,19 @@ PYBIND11_MODULE(tencore, m) {
         &py_brownian_motion_all_paths<float>);
   m.def("brownian_motion_all_paths_double",
         &py_brownian_motion_all_paths<double>);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // FFT
+
+  m.def("fft_float", &ten::fft<float>);
+  m.def("fft_double", &ten::fft<double>);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Diffeqs
+
+  m.def("euler_float", &py_euler<float>);
+  m.def("euler_double", &py_euler<double>);
+
 
   /////////////////////////////////////////////////////////////////////////////
   // Combinatorics
